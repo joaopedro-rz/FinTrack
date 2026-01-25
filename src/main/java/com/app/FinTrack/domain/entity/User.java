@@ -7,26 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Entidade JPA que representa um usuário do sistema FinTrack.
- * Esta classe mapeia diretamente para a tabela 'users' criada pela migration V1.
- *
- * SEGURANÇA:
- * - A senha será criptografada com BCrypt (quando implementarmos Spring Security)
- * - UUID garante IDs únicos e difíceis de enumerar
- *
- * LOMBOK:
- * - @Getter/@Setter: Gera getters e setters automaticamente
- * - @NoArgsConstructor: Construtor vazio (obrigatório para JPA)
- * - @AllArgsConstructor: Construtor com todos os campos
- * - @Builder: Padrão Builder para criar instâncias de forma fluente
- * - @EqualsAndHashCode: Gera equals() e hashCode() baseados apenas no ID
- *
- * POR QUE NÃO USAR @Data?
- * - @Data gera equals/hashCode com TODOS os campos
- * - Em entidades JPA com relacionamentos, isso causa loops infinitos
- * - Preferimos controlar manualmente quais campos usar
- */
 @Entity
 @Table(name = "users")
 @Getter

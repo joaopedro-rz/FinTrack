@@ -6,6 +6,7 @@ import com.app.FinTrack.domain.entity.User;
 import com.app.FinTrack.exception.EmailAlreadyExistsException;
 import com.app.FinTrack.exception.UserNotFoundException;
 import com.app.FinTrack.repository.UserRepository;
+import com.app.FinTrack.util.EmailUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -61,7 +62,7 @@ public class UserService {
     public UserResponseDTO findByEmail(String email) {
         log.debug("Buscando usuário por email: {}", email);
 
-        String normalizedEmail = email.toLowerCase().trim();
+        String normalizedEmail = EmailUtils.normalize(email);
 
         User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com email: " + email));
@@ -87,7 +88,7 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException("Usuário não encontrado com ID: " + id));
 
         // Validação: Se email mudou, verificar unicidade
-        String normalizedNewEmail = request.getEmail().toLowerCase().trim();
+        String normalizedNewEmail = EmailUtils.normalize(request.getEmail());
         if (!user.getEmail().equals(normalizedNewEmail)) {
             validateEmailNotExists(normalizedNewEmail);
         }
@@ -122,26 +123,8 @@ public class UserService {
         log.info("Usuário deletado com sucesso. ID: {}", id);
     }
 
-    private String normalizeEmail(String email) {
-        if (email == null) {
-            return null;
-        }
-
-        String normalized = email.trim().toLowerCase();
-
-        if (normalized.isEmpty()) {
-            throw new IllegalArgumentException("Email não pode ser vazio");
-        }
-
-        return normalized;
-    }
-
     private void validateEmailNotExists(String email) {
-        String normalizedEmail = normalizeEmail(email);
-
-        if (normalizedEmail == null) {
-            throw new IllegalArgumentException("Email não pode ser null");
-        }
+        String normalizedEmail = EmailUtils.normalize(email);
 
         if (userRepository.existsByEmail(normalizedEmail)) {
             log.warn("Tentativa de cadastro com email duplicado: {}", email);
@@ -156,12 +139,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
-        String normalizedEmail = normalizeEmail(email);
-
-        if (normalizedEmail == null) {
-            throw new IllegalArgumentException("Email não pode ser null");
-        }
-
+        String normalizedEmail = EmailUtils.normalize(email);
         return userRepository.existsByEmail(normalizedEmail);
     }
 

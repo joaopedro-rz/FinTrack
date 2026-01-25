@@ -6,13 +6,32 @@ services:
     container_name: fintrack-postgres
     restart: always
     environment:
-      POSTGRES_DB: fintrack_db
-      POSTGRES_USER: fintrack_user
-      POSTGRES_PASSWORD: fintrack_password
+      POSTGRES_DB: ${DB_NAME:-fintrack_db}
+      POSTGRES_USER: ${DB_USERNAME:-fintrack_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-fintrack_password}
     ports:
-      - "5433:5432"
+      - "${DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  # Para rodar a API junto com o banco (opcional)
+  # Descomente quando tiver o Dockerfile pronto
+  # api:
+  #   build: .
+  #   container_name: fintrack-api
+  #   restart: always
+  #   depends_on:
+  #     - postgres
+  #   environment:
+  #     - DB_USERNAME=${DB_USERNAME:-fintrack_user}
+  #     - DB_PASSWORD=${DB_PASSWORD:-fintrack_password}
+  #     - DB_HOST=postgres
+  #     - DB_PORT=5432
+  #     - DB_NAME=${DB_NAME:-fintrack_db}
+  #     - JWT_SECRET=${JWT_SECRET}
+  #     - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
+  #   ports:
+  #     - "8080:8080"
 
 volumes:
   postgres_data:
