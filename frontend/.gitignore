@@ -1,0 +1,59 @@
+# =====================================================
+# FinTrack Frontend - Git Ignore
+# =====================================================
+
+# ==================== DEPENDÊNCIAS ====================
+node_modules/
+.pnp
+.pnp.js
+
+# ==================== BUILD ====================
+dist/
+dist-ssr/
+build/
+*.local
+
+# ==================== IDE ====================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# ==================== LOGS ====================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ==================== ENVIRONMENT (SENSÍVEL!) ====================
+# NUNCA commitar arquivos com credenciais!
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+
+# ==================== SISTEMA OPERACIONAL ====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================== CACHE ====================
+.cache/
+.parcel-cache/
+.turbo/
+
+# ==================== TESTES/COVERAGE ====================
+coverage/
+*.lcov
+.nyc_output/
+
+# ==================== TEMPORÁRIOS ====================
+*.tmp
+*.temp
+*.swp
+*~

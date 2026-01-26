@@ -1,37 +1,119 @@
-version: '3.8'
+# =====================================================
+# Docker Compose - FinTrack
+# Orquestra todos os serviços da aplicação
+# =====================================================
+#
+# COMANDOS ÚTEIS:
+# ---------------
+# Subir tudo:           docker-compose up -d
+# Ver logs:             docker-compose logs -f
+# Parar tudo:           docker-compose down
+# Rebuild:              docker-compose up -d --build
+# Apenas banco:         docker-compose up -d postgres
+# Produção:             docker-compose --profile production up -d
+#
+# =====================================================
 
 services:
+  # ==================== BANCO DE DADOS ====================
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: fintrack-postgres
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${DB_NAME:-fintrack_db}
       POSTGRES_USER: ${DB_USERNAME:-fintrack_user}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-fintrack_password}
+      # Configurações de performance
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
     ports:
       - "${DB_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-fintrack_user} -d ${DB_NAME:-fintrack_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - fintrack-network
 
-  # Para rodar a API junto com o banco (opcional)
-  # Descomente quando tiver o Dockerfile pronto
-  # api:
-  #   build: .
-  #   container_name: fintrack-api
-  #   restart: always
-  #   depends_on:
-  #     - postgres
-  #   environment:
-  #     - DB_USERNAME=${DB_USERNAME:-fintrack_user}
-  #     - DB_PASSWORD=${DB_PASSWORD:-fintrack_password}
-  #     - DB_HOST=postgres
-  #     - DB_PORT=5432
-  #     - DB_NAME=${DB_NAME:-fintrack_db}
-  #     - JWT_SECRET=${JWT_SECRET}
-  #     - JWT_EXPIRATION=${JWT_EXPIRATION:-86400000}
-  #   ports:
-  #     - "8080:8080"
+  # ==================== BACKEND (API) ====================
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: fintrack-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Banco de dados - Nota: DB_HOST é 'postgres' (nome do serviço no compose)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-fintrack_db}
+      DB_USERNAME: ${DB_USERNAME:-fintrack_user}
+      DB_PASSWORD: ${DB_PASSWORD:-fintrack_password}
+      # JWT - OBRIGATÓRIO definir no .env
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET é obrigatório! Defina no arquivo .env}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+      # Spring
+      SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - fintrack-network
+    # Limites de recursos (opcional, mas recomendado)
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
 
+  # ==================== FRONTEND (WEB) ====================
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+      args:
+        VITE_API_URL: /api
+    container_name: fintrack-web
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - fintrack-network
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+        reservations:
+          memory: 64M
+
+# ==================== VOLUMES ====================
 volumes:
   postgres_data:
+    driver: local
+
+# ==================== NETWORKS ====================
+networks:
+  fintrack-network:
+    driver: bridge

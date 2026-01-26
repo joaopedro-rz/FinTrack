@@ -49,6 +49,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/enums/**").permitAll()  // Enums são públicos para o frontend
+                .requestMatchers("/api/health/**").permitAll() // Health check para Docker/monitoring
                 .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
             )

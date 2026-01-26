@@ -1,23 +1,38 @@
+# =====================================================
+# FinTrack - Git Ignore
+# =====================================================
+
+# ==================== JAVA/MAVEN ====================
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+*.class
+*.jar
+*.war
+*.ear
 
-### STS ###
+# Maven Wrapper (opcional, pode remover se quiser commitar)
+.mvn/wrapper/maven-wrapper.jar
+
+# ==================== IDE ====================
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+### Eclipse/STS ###
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+bin/
 
 ### NetBeans ###
 /nbproject/private/
@@ -25,15 +40,77 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
 
-### Environment Variables ###
+# ==================== NODE/FRONTEND ====================
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+*.local
+
+# ==================== BUILD ====================
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# ==================== LOGS ====================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==================== ENVIRONMENT (SENSÍVEL!) ====================
+# NUNCA commitar arquivos com credenciais!
 .env
+.env.*
 *.env
 !.env.example
 
+# Arquivos de configuração local
+application-local.yml
+application-local.properties
+application-dev.yml
+application-prod.yml
+
+# ==================== SISTEMA OPERACIONAL ====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==================== TEMPORÁRIOS ====================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+
+# ==================== DOCKER ====================
+# Arquivos locais do Docker (se houver)
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ==================== TESTES/COVERAGE ====================
+coverage/
+*.lcov
+.nyc_output/
+
+# ==================== OUTROS ====================
+# Arquivos de backup de banco
+*.sql.bak
+*.dump
+
+# Chaves privadas (segurança crítica!)
+*.pem
+*.key
+*.p12
+*.jks

@@ -1,0 +1,87 @@
+# =====================================================
+# FinTrack - Docker Ignore
+# Arquivos que NÃO devem ser copiados para os containers
+# =====================================================
+
+# ==================== GIT ====================
+.git/
+.gitignore
+.gitattributes
+
+# ==================== IDE ====================
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# ==================== DOCUMENTAÇÃO ====================
+# (não necessária no container de produção)
+docs/
+*.md
+!README.md
+
+# ==================== BUILD ARTIFACTS ====================
+# (serão gerados dentro do container)
+target/
+node_modules/
+dist/
+build/
+frontend/node_modules/
+frontend/dist/
+
+# ==================== ENVIRONMENT (SEGURANÇA!) ====================
+# NUNCA incluir credenciais no build da imagem!
+.env
+.env.*
+*.env
+!.env.example
+application-local.yml
+application-prod.yml
+
+# ==================== LOGS ====================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+
+# ==================== ARQUIVOS TEMPORÁRIOS ====================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+*.bak
+
+# ==================== SISTEMA OPERACIONAL ====================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ==================== SCRIPTS LOCAIS ====================
+# (não necessários no container)
+scripts/
+
+# ==================== TESTES ====================
+# (não necessários em produção)
+src/test/
+frontend/src/**/*.test.*
+frontend/src/**/*.spec.*
+coverage/
+.nyc_output/
+
+# ==================== DOCKER ====================
+# (evita recursão/confusão)
+docker-compose*.yml
+*.Dockerfile
+Dockerfile*
+# NÃO ignorar nginx.conf - necessário para o frontend!
+
+# ==================== CHAVES/SEGREDOS ====================
+*.pem
+*.key
+*.p12
+*.jks
