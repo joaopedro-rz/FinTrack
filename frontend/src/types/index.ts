@@ -219,6 +219,37 @@ export interface AllEnums {
   recurrenceTypes: EnumOption[];
 }
 
+// ==================== REPORTS ====================
+export interface TransactionReport {
+  id: string;
+  date: string;
+  type: 'INCOME' | 'EXPENSE';
+  typeDisplayName: string;
+  category: string;
+  categoryDisplayName: string;
+  description: string;
+  amount: number;
+  notes: string | null;
+}
+
+export interface ReportSummary {
+  startDate: string;
+  endDate: string;
+  filterType: 'ALL' | 'INCOME' | 'EXPENSE';
+  transactions: TransactionReport[];
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
+  incomeCount: number;
+  expenseCount: number;
+}
+
+export interface ReportFilters {
+  startDate: string;
+  endDate: string;
+  type: 'ALL' | 'INCOME' | 'EXPENSE';
+}
+
 // ==================== API ====================
 export interface ApiError {
   timestamp: string;

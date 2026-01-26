@@ -10,7 +10,9 @@ import type {
   Investment,
   InvestmentRequest,
   Dashboard,
-  AllEnums
+  AllEnums,
+  ReportSummary,
+  ReportFilters
 } from '@/types';
 
 // ==================== AUTH ====================
@@ -194,6 +196,73 @@ export const dashboardService = {
 export const enumService = {
   getAll: async (): Promise<AllEnums> => {
     const response = await api.get<AllEnums>('/enums/all');
+    return response.data;
+  },
+};
+
+// ==================== REPORTS ====================
+export const reportService = {
+  /**
+   * Busca relatório de transações com filtros.
+   */
+  getTransactions: async (filters: ReportFilters): Promise<ReportSummary> => {
+    const response = await api.get<ReportSummary>('/reports/transactions', {
+      params: {
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        type: filters.type,
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Faz download do relatório em PDF.
+   */
+  downloadPdf: async (filters: ReportFilters): Promise<Blob> => {
+    const response = await api.get('/reports/transactions/pdf', {
+      params: {
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        type: filters.type,
+      },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  /**
+   * Faz download do relatório em Excel.
+   */
+  downloadExcel: async (filters: ReportFilters): Promise<Blob> => {
+    const response = await api.get('/reports/transactions/excel', {
+      params: {
+        startDate: filters.startDate,
+        endDate: filters.endDate,
+        type: filters.type,
+      },
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  /**
+   * Relatório do mês atual.
+   */
+  getCurrentMonth: async (type: 'ALL' | 'INCOME' | 'EXPENSE' = 'ALL'): Promise<ReportSummary> => {
+    const response = await api.get<ReportSummary>('/reports/current-month', {
+      params: { type },
+    });
+    return response.data;
+  },
+
+  /**
+   * Relatório dos últimos 30 dias.
+   */
+  getLast30Days: async (type: 'ALL' | 'INCOME' | 'EXPENSE' = 'ALL'): Promise<ReportSummary> => {
+    const response = await api.get<ReportSummary>('/reports/last-30-days', {
+      params: { type },
+    });
     return response.data;
   },
 };

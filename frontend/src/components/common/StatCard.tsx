@@ -37,6 +37,17 @@ export default function StatCard({
     return 'text.secondary';
   };
 
+  const getIconFilter = (color: 'primary' | 'success' | 'error' | 'warning' | 'info'): string => {
+    const colorMap = {
+      success: 'drop-shadow(0px 2px 4px rgba(16, 185, 129, 0.6))',
+      error: 'drop-shadow(0px 2px 4px rgba(244, 63, 94, 0.6))',
+      primary: 'drop-shadow(0px 2px 4px rgba(59, 130, 246, 0.6))',
+      warning: 'drop-shadow(0px 2px 4px rgba(245, 158, 11, 0.6))',
+      info: 'drop-shadow(0px 2px 4px rgba(59, 130, 246, 0.6))',
+    };
+    return colorMap[color];
+  };
+
   if (loading) {
     return (
       <Card>
@@ -61,7 +72,6 @@ export default function StatCard({
       }}
     >
       <CardContent sx={{ p: 3 }}>
-        {/* Icon */}
         <Box
           sx={{
             width: 48,
@@ -73,12 +83,12 @@ export default function StatCard({
             bgcolor: (theme) => alpha(theme.palette[color].main, 0.1),
             color: `${color}.main`,
             mb: 2,
+            filter: getIconFilter(color),
           }}
         >
           {icon}
         </Box>
 
-        {/* Title */}
         <Typography
           variant="body2"
           sx={{
@@ -90,7 +100,6 @@ export default function StatCard({
           {title}
         </Typography>
 
-        {/* Value */}
         <Typography
           variant="h4"
           sx={{
@@ -103,7 +112,6 @@ export default function StatCard({
           {isCurrency ? formatCurrency(value) : value.toLocaleString('pt-BR')}
         </Typography>
 
-        {/* Trend & Subtitle */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {trend !== undefined && (
             <Box

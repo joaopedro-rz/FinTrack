@@ -3,8 +3,12 @@ package com.app.FinTrack.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.UUID;
 
 @Entity
@@ -15,7 +19,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -60,6 +64,40 @@ public class User {
         if (this.email != null) {
             this.email = this.email.trim().toLowerCase();
         }
+    }
+
+    // =============== UserDetails Implementation ===============
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        // TODO: Implementar sistema de roles/permissões quando necessário
+        return Collections.emptyList();
+    }
+
+    @Override
+    public String getUsername() {
+        // O email é usado como username
+        return this.email;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     @Override

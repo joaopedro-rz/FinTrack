@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-/** Delay em ms para limpar dados após fechar o dialog (permite animação de saída) */
+
 const DIALOG_CLOSE_ANIMATION_DELAY_MS = 150;
 
 interface UseDialogReturn<T> {

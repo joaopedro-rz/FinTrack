@@ -123,7 +123,7 @@ export default function DonutChart({
             </PieChart>
           </ResponsiveContainer>
 
-          {/* Center Label */}
+
           {(centerLabel || centerValue) && (
             <Box
               sx={{

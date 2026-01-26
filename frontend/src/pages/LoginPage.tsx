@@ -73,7 +73,7 @@ export default function LoginPage() {
         }}
       >
         <CardContent sx={{ p: 4 }}>
-          {/* Logo */}
+
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Box
               sx={{
@@ -99,7 +99,7 @@ export default function LoginPage() {
             </Typography>
           </Box>
 
-          {/* Alerts */}
+
           {sessionExpired && (
             <Alert severity="warning" sx={{ mb: 3 }}>
               Sua sessão expirou. Por favor, faça login novamente.
@@ -112,7 +112,7 @@ export default function LoginPage() {
             </Alert>
           )}
 
-          {/* Form */}
+
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
               fullWidth
@@ -178,7 +178,7 @@ export default function LoginPage() {
             </Button>
           </Box>
 
-          {/* Register Link */}
+
           <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary' }}>
             Não tem uma conta?{' '}
             <Link component={RouterLink} to="/register" underline="hover" fontWeight={600}>

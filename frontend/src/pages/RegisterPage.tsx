@@ -85,7 +85,7 @@ export default function RegisterPage() {
         }}
       >
         <CardContent sx={{ p: 4 }}>
-          {/* Logo */}
+
           <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Box
               sx={{
@@ -111,14 +111,14 @@ export default function RegisterPage() {
             </Typography>
           </Box>
 
-          {/* Error Alert */}
+
           {error && (
             <Alert severity="error" sx={{ mb: 3 }}>
               {error}
             </Alert>
           )}
 
-          {/* Form */}
+
           <Box component="form" onSubmit={handleSubmit}>
             <TextField
               fullWidth
@@ -226,7 +226,7 @@ export default function RegisterPage() {
             </Button>
           </Box>
 
-          {/* Login Link */}
+
           <Typography variant="body2" sx={{ textAlign: 'center', color: 'text.secondary' }}>
             Já tem uma conta?{' '}
             <Link component={RouterLink} to="/login" underline="hover" fontWeight={600}>

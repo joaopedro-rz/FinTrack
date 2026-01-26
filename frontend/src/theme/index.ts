@@ -47,6 +47,7 @@ const colors = {
     100: '#F1F5F9',
     200: '#E2E8F0',
     300: '#CBD5E1',
+    350: '#B0BAC9',  // Intermediário entre 300 e 400 para bordas mais visíveis
     400: '#94A3B8',
     500: '#64748B',
     600: '#475569',
@@ -77,7 +78,7 @@ export const lightTheme = createTheme({
       primary: colors.grey[900],
       secondary: colors.grey[600],
     },
-    divider: colors.grey[200],
+    divider: colors.grey[350],
   },
   typography: {
     fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
@@ -170,14 +171,14 @@ export const lightTheme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          scrollbarColor: `${colors.grey[300]} ${colors.grey[100]}`,
+          scrollbarColor: `${colors.grey[350]} ${colors.grey[100]}`,
           '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
             width: 8,
             height: 8,
           },
           '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
             borderRadius: 8,
-            backgroundColor: colors.grey[300],
+            backgroundColor: colors.grey[350],
           },
           '&::-webkit-scrollbar-track, & *::-webkit-scrollbar-track': {
             backgroundColor: colors.grey[100],
@@ -214,7 +215,7 @@ export const lightTheme = createTheme({
         root: {
           borderRadius: 16,
           boxShadow: '0px 4px 20px rgba(15, 23, 42, 0.08)',
-          border: `1px solid ${colors.grey[100]}`,
+          border: `1px solid ${colors.grey[350]}`, // Borda visível no modo claro
         },
       },
     },
@@ -252,13 +253,14 @@ export const lightTheme = createTheme({
       styleOverrides: {
         root: {
           boxShadow: '0px 1px 3px rgba(15, 23, 42, 0.08)',
+          borderBottom: `1px solid ${colors.grey[350]}`, // Linha de separação visível
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          borderRight: `1px solid ${colors.grey[100]}`,
+          borderRight: `1px solid ${colors.grey[350]}`, // Borda visível no modo claro
         },
       },
     },
@@ -281,6 +283,7 @@ export const lightTheme = createTheme({
         head: {
           fontWeight: 600,
           backgroundColor: colors.grey[50],
+          borderBottom: `2px solid ${colors.grey[350]}`, // Linha de separação mais visível
         },
       },
     },

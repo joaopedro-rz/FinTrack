@@ -82,14 +82,14 @@ export default function DashboardPage() {
 
   return (
     <Box>
-      {/* Error Alert */}
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
-      {/* Header */}
+
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
           Dashboard
@@ -99,7 +99,7 @@ export default function DashboardPage() {
         </Typography>
       </Box>
 
-      {/* Stats Cards */}
+
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
@@ -144,9 +144,9 @@ export default function DashboardPage() {
         </Grid>
       </Grid>
 
-      {/* Charts */}
+
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        {/* Area Chart - Income vs Expense */}
+
         <Grid item xs={12} lg={8}>
           <Card>
             <CardContent sx={{ p: 3 }}>
@@ -169,7 +169,7 @@ export default function DashboardPage() {
           </Card>
         </Grid>
 
-        {/* Donut Chart - Distribution */}
+
         <Grid item xs={12} lg={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent sx={{ p: 3 }}>
@@ -193,9 +193,9 @@ export default function DashboardPage() {
         </Grid>
       </Grid>
 
-      {/* Additional Info Cards */}
+
       <Grid container spacing={3}>
-        {/* Savings Rate */}
+
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent sx={{ p: 3 }}>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
           </Card>
         </Grid>
 
-        {/* Pending Expenses */}
+
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent sx={{ p: 3 }}>
@@ -265,7 +265,7 @@ export default function DashboardPage() {
           </Card>
         </Grid>
 
-        {/* Investment Performance */}
+
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent sx={{ p: 3 }}>

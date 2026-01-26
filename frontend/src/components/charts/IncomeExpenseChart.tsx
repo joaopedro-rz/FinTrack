@@ -99,7 +99,16 @@ export default function IncomeExpenseChart({ data, height = 350 }: IncomeExpense
           domain={[0, 'auto']}
           allowDataOverflow={false}
         />
-        <Tooltip content={<CustomTooltip />} />
+        <Tooltip
+          content={<CustomTooltip />}
+          animationDuration={150}
+          isAnimationActive={true}
+          cursor={{
+            stroke: theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF',
+            strokeWidth: 2,
+            strokeDasharray: '5 5',
+          }}
+        />
         <Legend
           verticalAlign="top"
           height={36}
@@ -117,6 +126,18 @@ export default function IncomeExpenseChart({ data, height = 350 }: IncomeExpense
           strokeWidth={2}
           fillOpacity={1}
           fill="url(#incomeGradient)"
+          dot={{
+            fill: chartColors.income,
+            stroke: theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF',
+            strokeWidth: 2,
+            r: 4,
+          }}
+          activeDot={{
+            r: 6,
+            fill: chartColors.income,
+            stroke: theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF',
+            strokeWidth: 2,
+          }}
         />
         <Area
           type="monotone"
@@ -126,6 +147,18 @@ export default function IncomeExpenseChart({ data, height = 350 }: IncomeExpense
           strokeWidth={2}
           fillOpacity={1}
           fill="url(#expenseGradient)"
+          dot={{
+            fill: chartColors.expense,
+            stroke: theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF',
+            strokeWidth: 2,
+            r: 4,
+          }}
+          activeDot={{
+            r: 6,
+            fill: chartColors.expense,
+            stroke: theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF',
+            strokeWidth: 2,
+          }}
         />
       </AreaChart>
     </ResponsiveContainer>

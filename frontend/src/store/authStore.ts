@@ -12,8 +12,10 @@ interface AuthState {
   isAuthenticated: boolean;
   login: (data: AuthResponse) => void;
   logout: () => void;
+  clearAuth: () => void;
   updateUser: (name: string, email: string) => void;
   updateAvatar: (avatarUrl: string) => void;
+  removeAvatar: () => void; // Remove foto explicitamente
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -28,26 +30,42 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
 
       login: (data: AuthResponse) => {
-        set({
+        set((state) => ({
           token: data.token,
           userId: data.userId,
           name: data.name,
           email: data.email,
           createdAt: data.createdAt,
+          // Preserva o avatarUrl se o usuário já tinha uma foto configurada
+          avatarUrl: state.avatarUrl,
           isAuthenticated: true,
-        });
+        }));
       },
 
       logout: () => {
-        set({
+        // Preserva a foto de perfil mesmo ao fazer logout (como redes sociais)
+        set((state) => ({
           token: null,
           userId: null,
           name: null,
           email: null,
           createdAt: null,
-          avatarUrl: null,
+          avatarUrl: state.avatarUrl, // Mantém a foto
           isAuthenticated: false,
-        });
+        }));
+      },
+
+      clearAuth: () => {
+        // Usado quando token expira - preserva avatar
+        set((state) => ({
+          token: null,
+          userId: null,
+          name: null,
+          email: null,
+          createdAt: null,
+          avatarUrl: state.avatarUrl, // Mantém o avatar
+          isAuthenticated: false,
+        }));
       },
 
       updateUser: (name: string, email: string) => {
@@ -56,6 +74,11 @@ export const useAuthStore = create<AuthState>()(
 
       updateAvatar: (avatarUrl: string) => {
         set({ avatarUrl });
+      },
+
+      removeAvatar: () => {
+        // Remove a foto explicitamente quando o usuário quiser
+        set({ avatarUrl: null });
       },
     }),
     {

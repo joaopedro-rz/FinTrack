@@ -15,6 +15,7 @@ import IncomesPage from '@/pages/IncomesPage';
 import ExpensesPage from '@/pages/ExpensesPage';
 import InvestmentsPage from '@/pages/InvestmentsPage';
 import ProfilePage from '@/pages/ProfilePage';
+import ReportsPage from '@/pages/ReportsPage';
 
 // Protected Route Component
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -47,7 +48,7 @@ export default function App() {
       <CssBaseline />
       <BrowserRouter>
         <Routes>
-          {/* Public Routes */}
+
           <Route
             path="/login"
             element={
@@ -65,7 +66,7 @@ export default function App() {
             }
           />
 
-          {/* Protected Routes */}
+
           <Route
             path="/"
             element={
@@ -79,10 +80,11 @@ export default function App() {
             <Route path="incomes" element={<IncomesPage />} />
             <Route path="expenses" element={<ExpensesPage />} />
             <Route path="investments" element={<InvestmentsPage />} />
+            <Route path="reports" element={<ReportsPage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 
-          {/* Catch all - redirect to dashboard or login */}
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
