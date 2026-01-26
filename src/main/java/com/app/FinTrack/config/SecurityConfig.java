@@ -48,6 +48,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/enums/**").permitAll()  // Enums são públicos para o frontend
                 .requestMatchers("/error").permitAll()
                 .anyRequest().authenticated()
             )
