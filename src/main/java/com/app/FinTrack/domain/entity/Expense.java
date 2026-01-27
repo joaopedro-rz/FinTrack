@@ -54,6 +54,9 @@ public class Expense {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
+    @Column(name = "due_date", nullable = false)
+    private LocalDate dueDate;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "recurrence", nullable = false, length = 20)
     @Builder.Default
@@ -82,8 +85,9 @@ public class Expense {
         this.category = category;
         this.paymentMethod = paymentMethod;
         this.date = date;
+        this.dueDate = date;
         this.recurrence = RecurrenceType.ONCE;
-        this.isPaid = true;
+        this.isPaid = false;
     }
 
     @Override

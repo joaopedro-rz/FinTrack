@@ -19,28 +19,40 @@ import {
   ShowChart,
 } from '@mui/icons-material';
 import StatCard from '@/components/common/StatCard';
+import PeriodFilterSelect from '@/components/common/PeriodFilterSelect';
 import IncomeExpenseChart from '@/components/charts/IncomeExpenseChart';
 import DonutChart from '@/components/charts/DonutChart';
-import { dashboardService } from '@/services';
+import { dashboardService, incomeService, expenseService } from '@/services';
 import { formatCurrency, formatPercentage } from '@/utils/formatters';
+import { calculateRecurringTotal } from '@/utils/recurringCalculations';
 import { chartColors } from '@/theme';
-import type { Dashboard } from '@/types';
+import { usePeriodFilter } from '@/hooks';
+import type { Dashboard, Income, Expense } from '@/types';
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [incomes, setIncomes] = useState<Income[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const { selectedPeriod, setSelectedPeriod, dateRange } = usePeriodFilter('30_DAYS');
 
   useEffect(() => {
     loadDashboard();
-  }, []);
+  }, [dateRange]);
 
   const loadDashboard = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await dashboardService.get();
-      setDashboard(data);
+      const [dashboardData, incomesData, expensesData] = await Promise.all([
+        dashboardService.getByPeriod(dateRange.startDate, dateRange.endDate),
+        incomeService.getAll(),
+        expenseService.getAll(),
+      ]);
+      setDashboard(dashboardData);
+      setIncomes(incomesData);
+      setExpenses(expensesData);
     } catch (err) {
       setError('Erro ao carregar dashboard. Tente novamente mais tarde.');
       console.error(err);
@@ -49,36 +61,96 @@ export default function DashboardPage() {
     }
   };
 
-  /**
-   * Gera os nomes dos últimos 6 meses para o gráfico.
-   * Os dados reais virão do backend quando o histórico for implementado.
-   */
-  const getLastSixMonths = () => {
-    const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const result = [];
-    const today = new Date();
+  const generateChartData = () => {
+    const startDate = new Date(dateRange.startDate);
+    const endDate = new Date(dateRange.endDate);
 
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const monthName = months[d.getMonth()];
-      // Mês atual usa dados reais, outros meses ficam zerados até implementar histórico
-      const isCurrentMonth = i === 0;
-      result.push({
-        name: monthName,
-        income: isCurrentMonth ? (dashboard?.totalIncome || 0) : 0,
-        expense: isCurrentMonth ? (dashboard?.totalExpense || 0) : 0,
-      });
+    const monthlyData = new Map<string, { income: number; expense: number }>();
+
+    let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    while (currentDate <= endDate) {
+      const key = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      monthlyData.set(key, { income: 0, expense: 0 });
+      currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
     }
-    return result;
+
+    incomes.forEach(income => {
+      if (income.recurrence === 'ONCE') {
+        const date = new Date(income.date);
+        if (date >= startDate && date <= endDate) {
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (monthlyData.has(key)) {
+            monthlyData.get(key)!.income += income.amount;
+          }
+        }
+      } else {
+        const createdDate = new Date(income.date);
+        for (const [key] of monthlyData.entries()) {
+          const [year, month] = key.split('-');
+          const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+
+          if (monthDate >= createdDate && monthDate >= startDate && monthDate <= endDate) {
+            monthlyData.get(key)!.income += income.amount;
+          }
+        }
+      }
+    });
+
+    expenses.forEach(expense => {
+      if (expense.recurrence === 'ONCE') {
+        const date = new Date(expense.dueDate);
+        if (date >= startDate && date <= endDate) {
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          if (monthlyData.has(key)) {
+            monthlyData.get(key)!.expense += expense.amount;
+          }
+        }
+      } else {
+        const createdDate = new Date(expense.dueDate);
+        for (const [key] of monthlyData.entries()) {
+          const [year, month] = key.split('-');
+          const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+
+          if (monthDate >= createdDate && monthDate >= startDate && monthDate <= endDate) {
+            monthlyData.get(key)!.expense += expense.amount;
+          }
+        }
+      }
+    });
+
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    return Array.from(monthlyData.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, data]) => {
+        const [year, month] = key.split('-');
+        const monthIndex = parseInt(month) - 1;
+        return {
+          name: `${monthNames[monthIndex]}/${year.slice(2)}`,
+          income: data.income,
+          expense: data.expense,
+        };
+      });
   };
 
-  const chartData = getLastSixMonths();
+  const chartData = generateChartData();
 
-  // Dados para o gráfico de donut
-  const donutData = dashboard ? [
-    { name: 'Receitas', value: dashboard.totalIncome, color: chartColors.income },
-    { name: 'Despesas', value: dashboard.totalExpense, color: chartColors.expense },
-  ] : [];
+  const totalIncomeWithRecurrence = calculateRecurringTotal(incomes, dateRange, 'date');
+  const totalExpenseWithRecurrence = calculateRecurringTotal(expenses, dateRange, 'dueDate');
+  const balanceWithRecurrence = totalIncomeWithRecurrence - totalExpenseWithRecurrence;
+
+  const savingsRate = totalIncomeWithRecurrence > 0
+    ? ((totalIncomeWithRecurrence - totalExpenseWithRecurrence) / totalIncomeWithRecurrence) * 100
+    : 0;
+
+  const pendingExpensesTotal = expenses
+    .filter(expense => !expense.isPaid)
+    .reduce((sum, expense) => sum + expense.amount, 0);
+
+  const donutData = [
+    { name: 'Receitas', value: totalIncomeWithRecurrence, color: chartColors.income },
+    { name: 'Despesas', value: totalExpenseWithRecurrence, color: chartColors.expense },
+  ];
 
   return (
     <Box>
@@ -104,29 +176,29 @@ export default function DashboardPage() {
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Receitas Totais"
-            value={dashboard?.totalIncome || 0}
+            value={totalIncomeWithRecurrence}
             icon={<TrendingUp />}
             color="success"
-            subtitle={`${dashboard?.incomeCount || 0} registros`}
+            subtitle={`${incomes.length} registros`}
             loading={loading}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Despesas Totais"
-            value={dashboard?.totalExpense || 0}
+            value={totalExpenseWithRecurrence}
             icon={<TrendingDown />}
             color="error"
-            subtitle={`${dashboard?.expenseCount || 0} registros`}
+            subtitle={`${expenses.length} registros`}
             loading={loading}
           />
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
             title="Balanço"
-            value={dashboard?.balance || 0}
+            value={balanceWithRecurrence}
             icon={<AccountBalance />}
-            color={(dashboard?.balance || 0) >= 0 ? 'primary' : 'error'}
+            color={balanceWithRecurrence >= 0 ? 'primary' : 'error'}
             subtitle="Receitas - Despesas"
             loading={loading}
           />
@@ -156,9 +228,13 @@ export default function DashboardPage() {
                     Receitas vs Despesas
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Evolução dos últimos 6 meses
+                    Análise do período selecionado
                   </Typography>
                 </Box>
+                <PeriodFilterSelect
+                  value={selectedPeriod}
+                  onChange={setSelectedPeriod}
+                />
               </Box>
               {loading ? (
                 <Skeleton variant="rectangular" height={350} sx={{ borderRadius: 2 }} />
@@ -185,7 +261,7 @@ export default function DashboardPage() {
                 <DonutChart
                   data={donutData}
                   centerLabel="Taxa de Poupança"
-                  centerValue={formatPercentage(dashboard?.savingsRate || 0)}
+                  centerValue={formatPercentage(savingsRate)}
                 />
               )}
             </CardContent>
@@ -219,7 +295,7 @@ export default function DashboardPage() {
                     Taxa de Poupança
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {loading ? <Skeleton width={80} /> : formatPercentage(dashboard?.savingsRate || 0)}
+                    {loading ? <Skeleton width={80} /> : formatPercentage(savingsRate)}
                   </Typography>
                 </Box>
               </Box>
@@ -254,7 +330,7 @@ export default function DashboardPage() {
                     Despesas Pendentes
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                    {loading ? <Skeleton width={100} /> : formatCurrency(dashboard?.pendingExpense || 0)}
+                    {loading ? <Skeleton width={100} /> : formatCurrency(pendingExpensesTotal)}
                   </Typography>
                 </Box>
               </Box>

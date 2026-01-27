@@ -31,6 +31,9 @@ public record ExpenseRequestDTO(
         @NotNull(message = "Data é obrigatória")
         LocalDate date,
 
+        @NotNull(message = "Data de vencimento é obrigatória")
+        LocalDate dueDate,
+
         RecurrenceType recurrence,
 
         Boolean isPaid,
@@ -43,7 +46,10 @@ public record ExpenseRequestDTO(
             recurrence = RecurrenceType.ONCE;
         }
         if (isPaid == null) {
-            isPaid = true;
+            isPaid = false; // Por padrão, despesas são criadas como pendentes
+        }
+        if (dueDate == null) {
+            dueDate = date; // Se não informado, vencimento = data de criação
         }
     }
 }

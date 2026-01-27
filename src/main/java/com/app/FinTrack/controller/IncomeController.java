@@ -132,4 +132,16 @@ public class IncomeController {
         long count = incomeService.count(userId);
         return ResponseEntity.ok(count);
     }
+
+    /**
+     * Busca receitas por período com recorrentes no topo.
+     */
+    @GetMapping("/period/ordered")
+    public ResponseEntity<List<IncomeResponseDTO>> findByPeriodOrderedByRecurrence(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        UUID userId = authUtils.getCurrentUserId();
+        List<IncomeResponseDTO> response = incomeService.findByPeriodOrderedByRecurrence(userId, startDate, endDate);
+        return ResponseEntity.ok(response);
+    }
 }

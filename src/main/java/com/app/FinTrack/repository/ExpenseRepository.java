@@ -68,4 +68,19 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID> {
 
     //BUSCA POR DESCRIÇÃO
     List<Expense> findByUserIdAndDescriptionContainingIgnoreCase(UUID userId, String description);
+
+    // BUSCA POR DATA DE VENCIMENTO
+    List<Expense> findByUserIdAndDueDateBetween(UUID userId, LocalDate startDate, LocalDate endDate);
+
+    List<Expense> findByUserIdAndIsPaidAndDueDateBetween(UUID userId, Boolean isPaid, LocalDate startDate, LocalDate endDate);
+
+    // BUSCA ORDENADA CUSTOMIZADA (para lógica de exibição)
+    @Query("SELECT e FROM Expense e WHERE e.user.id = :userId AND e.dueDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY CASE WHEN e.isPaid = false THEN 0 ELSE 1 END, " +
+           "CASE WHEN e.recurrence != 'ONCE' THEN 0 ELSE 1 END, " +
+           "e.dueDate ASC")
+    List<Expense> findByUserIdAndDueDateBetweenOrderedByPriority(
+            @Param("userId") UUID userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }

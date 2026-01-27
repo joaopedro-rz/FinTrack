@@ -96,7 +96,7 @@ export default function IncomeExpenseChart({ data, height = 350 }: IncomeExpense
           tickLine={false}
           tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
           tickFormatter={formatChartCurrency}
-          domain={[0, 'auto']}
+          domain={['auto', 'auto']}
           allowDataOverflow={false}
         />
         <Tooltip

@@ -137,6 +137,17 @@ public class IncomeService {
         return incomeRepository.countByUserIdAndDateBetween(userId, startDate, endDate);
     }
 
+    /**
+     * Busca receitas por período com ordenação por recorrência.
+     * Recorrentes aparecem primeiro.
+     */
+    public List<IncomeResponseDTO> findByPeriodOrderedByRecurrence(UUID userId, LocalDate startDate, LocalDate endDate) {
+        return incomeRepository.findByUserIdAndDateBetweenOrderedByRecurrence(userId, startDate, endDate)
+                .stream()
+                .map(IncomeResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
     //MÉTODOS AUXILIARES
     private User findUserById(UUID userId) {
         return userRepository.findById(userId)

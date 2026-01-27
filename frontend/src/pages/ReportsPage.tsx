@@ -283,17 +283,18 @@ export default function ReportsPage() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Data</TableCell>
+                    <TableCell>Data de Criação</TableCell>
                     <TableCell>Tipo</TableCell>
                     <TableCell>Categoria</TableCell>
                     <TableCell>Descrição</TableCell>
+                    <TableCell>Vencimento</TableCell>
                     <TableCell align="right">Valor</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {report.transactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                           Nenhuma transação encontrada no período selecionado
                         </Typography>
@@ -302,7 +303,7 @@ export default function ReportsPage() {
                   ) : (
                     report.transactions.map((transaction) => (
                       <TableRow key={transaction.id} hover>
-                        <TableCell>{formatDate(transaction.date)}</TableCell>
+                        <TableCell>{formatDate(transaction.createdAt)}</TableCell>
                         <TableCell>
                           <Chip
                             label={transaction.typeDisplayName}
@@ -319,6 +320,11 @@ export default function ReportsPage() {
                               {transaction.notes}
                             </Typography>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          {transaction.type === 'EXPENSE' && transaction.dueDate
+                            ? formatDate(transaction.dueDate)
+                            : '-'}
                         </TableCell>
                         <TableCell align="right">
                           <Typography

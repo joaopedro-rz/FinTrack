@@ -6,6 +6,7 @@ import com.app.FinTrack.domain.entity.Expense;
 import com.app.FinTrack.domain.entity.User;
 import com.app.FinTrack.domain.enums.ExpenseCategory;
 import com.app.FinTrack.domain.enums.PaymentMethod;
+import com.app.FinTrack.domain.enums.RecurrenceType;
 import com.app.FinTrack.exception.ResourceNotFoundException;
 import com.app.FinTrack.repository.ExpenseRepository;
 import com.app.FinTrack.repository.UserRepository;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -41,6 +43,7 @@ public class ExpenseService {
                 .category(request.category())
                 .paymentMethod(request.paymentMethod())
                 .date(request.date())
+                .dueDate(request.dueDate())
                 .recurrence(request.recurrence())
                 .isPaid(request.isPaid())
                 .notes(request.notes())
@@ -73,6 +76,7 @@ public class ExpenseService {
         expense.setCategory(request.category());
         expense.setPaymentMethod(request.paymentMethod());
         expense.setDate(request.date());
+        expense.setDueDate(request.dueDate());
         expense.setRecurrence(request.recurrence());
         expense.setIsPaid(request.isPaid());
         expense.setNotes(request.notes());
@@ -127,7 +131,36 @@ public class ExpenseService {
     public ExpenseResponseDTO markAsPaid(UUID userId, UUID expenseId) {
         Expense expense = findExpenseByIdAndUser(expenseId, userId);
         expense.setIsPaid(true);
+
+        if (expense.getRecurrence() != null && expense.getRecurrence() != RecurrenceType.ONCE) {
+            LocalDate nextDueDate = calculateNextDueDate(expense.getDueDate(), expense.getRecurrence());
+            expense.setDueDate(nextDueDate);
+
+            YearMonth currentYearMonth = YearMonth.now();
+            YearMonth dueYearMonth = YearMonth.from(expense.getDueDate());
+
+            if (!dueYearMonth.equals(currentYearMonth)) {
+                expense.setIsPaid(false);
+            }
+
+            log.info("Despesa recorrente atualizada. Próximo vencimento: {}", nextDueDate);
+        }
+
         return ExpenseResponseDTO.fromEntity(expenseRepository.save(expense));
+    }
+
+    private LocalDate calculateNextDueDate(LocalDate currentDueDate, RecurrenceType recurrence) {
+        return switch (recurrence) {
+            case DAILY -> currentDueDate.plusDays(1);
+            case WEEKLY -> currentDueDate.plusWeeks(1);
+            case BIWEEKLY -> currentDueDate.plusWeeks(2);
+            case MONTHLY -> currentDueDate.plusMonths(1);
+            case BIMONTHLY -> currentDueDate.plusMonths(2);
+            case QUARTERLY -> currentDueDate.plusMonths(3);
+            case SEMIANNUAL -> currentDueDate.plusMonths(6);
+            case ANNUAL -> currentDueDate.plusYears(1);
+            case ONCE -> currentDueDate;
+        };
     }
 
     @Transactional
@@ -155,6 +188,20 @@ public class ExpenseService {
 
     public long countByPeriod(UUID userId, LocalDate startDate, LocalDate endDate) {
         return expenseRepository.countByUserIdAndDateBetween(userId, startDate, endDate);
+    }
+
+    public List<ExpenseResponseDTO> findByDueDatePeriodWithPriority(UUID userId, LocalDate startDate, LocalDate endDate) {
+        return expenseRepository.findByUserIdAndDueDateBetweenOrderedByPriority(userId, startDate, endDate)
+                .stream()
+                .map(ExpenseResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<ExpenseResponseDTO> findByDueDateAndStatus(UUID userId, Boolean isPaid, LocalDate startDate, LocalDate endDate) {
+        return expenseRepository.findByUserIdAndIsPaidAndDueDateBetween(userId, isPaid, startDate, endDate)
+                .stream()
+                .map(ExpenseResponseDTO::fromEntity)
+                .collect(Collectors.toList());
     }
 
     private User findUserById(UUID userId) {

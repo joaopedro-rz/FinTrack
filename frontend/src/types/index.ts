@@ -118,6 +118,7 @@ export interface Expense {
   paymentMethod: PaymentMethod;
   paymentMethodDisplayName: string;
   date: string;
+  dueDate: string;
   recurrence: RecurrenceType;
   recurrenceDisplayName: string;
   isPaid: boolean;
@@ -132,6 +133,7 @@ export interface ExpenseRequest {
   category: ExpenseCategory;
   paymentMethod: PaymentMethod;
   date: string;
+  dueDate: string;
   recurrence?: RecurrenceType;
   isPaid?: boolean;
   notes?: string;
@@ -223,6 +225,7 @@ export interface AllEnums {
 export interface TransactionReport {
   id: string;
   date: string;
+  dueDate: string | null;
   type: 'INCOME' | 'EXPENSE';
   typeDisplayName: string;
   category: string;
@@ -230,6 +233,7 @@ export interface TransactionReport {
   description: string;
   amount: number;
   notes: string | null;
+  createdAt: string;
 }
 
 export interface ReportSummary {
@@ -249,6 +253,22 @@ export interface ReportFilters {
   endDate: string;
   type: 'ALL' | 'INCOME' | 'EXPENSE';
 }
+
+// ==================== FILTROS ====================
+export type PeriodFilter = '30_DAYS' | 'BIMONTHLY' | 'SEMESTER' | 'ANNUAL';
+
+export interface PeriodFilterOption {
+  value: PeriodFilter;
+  label: string;
+  days: number;
+}
+
+export const PERIOD_FILTERS: PeriodFilterOption[] = [
+  { value: '30_DAYS', label: 'Últimos 30 dias', days: 30 },
+  { value: 'BIMONTHLY', label: 'Bimestre', days: 60 },
+  { value: 'SEMESTER', label: 'Semestre', days: 180 },
+  { value: 'ANNUAL', label: 'Anual', days: 365 },
+];
 
 // ==================== API ====================
 export interface ApiError {

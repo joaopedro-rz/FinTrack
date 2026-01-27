@@ -70,4 +70,13 @@ public interface IncomeRepository extends JpaRepository<Income, UUID> {
     //BUSCA POR DESCRIÇÃO
     // Busca receitas contendo texto na descrição (case insensitive).
     List<Income> findByUserIdAndDescriptionContainingIgnoreCase(UUID userId, String description);
+
+    // BUSCA ORDENADA POR RECORRÊNCIA
+    // Ordem: 1) Recorrentes, 2) Únicas, 3) Data mais recente
+    @Query("SELECT i FROM Income i WHERE i.user.id = :userId AND i.date BETWEEN :startDate AND :endDate " +
+           "ORDER BY CASE WHEN i.recurrence != 'ONCE' THEN 0 ELSE 1 END, i.date DESC")
+    List<Income> findByUserIdAndDateBetweenOrderedByRecurrence(
+            @Param("userId") UUID userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }

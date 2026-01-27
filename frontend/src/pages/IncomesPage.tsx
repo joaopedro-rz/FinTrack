@@ -31,9 +31,12 @@ import {
 } from '@mui/icons-material';
 import { incomeService, enumService } from '@/services';
 import { formatCurrency, formatDate } from '@/utils/formatters';
+import { calculateRecurringTotal, shouldShowRecurringItem } from '@/utils/recurringCalculations';
 import Loading from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import PeriodFilterSelect from '@/components/common/PeriodFilterSelect';
+import { usePeriodFilter } from '@/hooks';
 import type { Income, IncomeRequest, EnumOption } from '@/types';
 
 export default function IncomesPage() {
@@ -45,6 +48,7 @@ export default function IncomesPage() {
   const [recurrenceTypes, setRecurrenceTypes] = useState<EnumOption[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [incomeToDelete, setIncomeToDelete] = useState<string | null>(null);
+  const { selectedPeriod, setSelectedPeriod, dateRange } = usePeriodFilter('30_DAYS');
 
   // Form state
   const [form, setForm] = useState<IncomeRequest>({
@@ -143,7 +147,15 @@ export default function IncomesPage() {
     setIncomeToDelete(null);
   };
 
-  const totalIncome = incomes.reduce((sum, income) => sum + income.amount, 0);
+  const filteredIncomes = incomes
+    .filter((income) => shouldShowRecurringItem(income, dateRange, 'date'))
+    .sort((a, b) => {
+      if (a.recurrence !== 'ONCE' && b.recurrence === 'ONCE') return -1;
+      if (a.recurrence === 'ONCE' && b.recurrence !== 'ONCE') return 1;
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+  const totalIncome = calculateRecurringTotal(filteredIncomes, dateRange, 'date');
 
   if (loading) {
     return <Loading message="Carregando receitas..." />;
@@ -190,7 +202,7 @@ export default function IncomesPage() {
                 <TrendingUp sx={{ fontSize: 28 }} />
               </Box>
             </Grid>
-            <Grid item>
+            <Grid item xs>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 Total de Receitas
               </Typography>
@@ -199,17 +211,23 @@ export default function IncomesPage() {
               </Typography>
             </Grid>
             <Grid item>
-              <Chip label={`${incomes.length} registros`} variant="outlined" />
+              <PeriodFilterSelect
+                value={selectedPeriod}
+                onChange={setSelectedPeriod}
+              />
+            </Grid>
+            <Grid item>
+              <Chip label={`${filteredIncomes.length} registros`} variant="outlined" />
             </Grid>
           </Grid>
         </CardContent>
       </Card>
 
       {/* Table */}
-      {incomes.length === 0 ? (
+      {filteredIncomes.length === 0 ? (
         <EmptyState
-          title="Nenhuma receita cadastrada"
-          description="Comece adicionando sua primeira receita para acompanhar suas entradas de dinheiro."
+          title="Nenhuma receita encontrada"
+          description="Não há receitas no período selecionado. Tente ajustar o filtro ou adicione uma nova receita."
           actionLabel="Adicionar Receita"
           onAction={() => handleOpenDialog()}
         />
@@ -228,7 +246,7 @@ export default function IncomesPage() {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {incomes.map((income) => (
+                {filteredIncomes.map((income) => (
                   <TableRow key={income.id} hover>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -321,28 +339,33 @@ export default function IncomesPage() {
               <Grid item xs={6}>
                 <TextField
                   fullWidth
-                  type="date"
-                  label="Data"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                />
+                  select
+                  label="Recorrência"
+                  value={form.recurrence}
+                  onChange={(e) => setForm({ ...form, recurrence: e.target.value as any })}
+                >
+                  {recurrenceTypes.map((rec) => (
+                    <MenuItem key={rec.value} value={rec.value}>
+                      {rec.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
               </Grid>
             </Grid>
             <TextField
               fullWidth
-              select
-              label="Recorrência"
-              value={form.recurrence}
-              onChange={(e) => setForm({ ...form, recurrence: e.target.value as any })}
+              type="date"
+              label={form.recurrence === 'ONCE' ? 'Data do Recebimento' : 'Data de Recebimento (Mensal)'}
+              value={form.date}
+              onChange={(e) => setForm({ ...form, date: e.target.value })}
+              InputLabelProps={{ shrink: true }}
               sx={{ mb: 2.5 }}
-            >
-              {recurrenceTypes.map((rec) => (
-                <MenuItem key={rec.value} value={rec.value}>
-                  {rec.label}
-                </MenuItem>
-              ))}
-            </TextField>
+              helperText={
+                form.recurrence !== 'ONCE'
+                  ? 'Esta receita será contabilizada mensalmente a partir desta data'
+                  : 'Data única do recebimento'
+              }
+            />
             <TextField
               fullWidth
               label="Observações"

@@ -35,10 +35,15 @@ import {
 } from '@mui/icons-material';
 import { expenseService, enumService } from '@/services';
 import { formatCurrency, formatDate } from '@/utils/formatters';
+import { calculateRecurringTotal, shouldShowRecurringItem } from '@/utils/recurringCalculations';
 import Loading from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
+import PeriodFilterSelect from '@/components/common/PeriodFilterSelect';
+import { usePeriodFilter } from '@/hooks';
 import type { Expense, ExpenseRequest, EnumOption } from '@/types';
+
+const DEFAULT_EXPENSE_IS_PAID = false;
 
 export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -50,6 +55,7 @@ export default function ExpensesPage() {
   const [recurrenceTypes, setRecurrenceTypes] = useState<EnumOption[]>([]);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expenseToDelete, setExpenseToDelete] = useState<string | null>(null);
+  const { selectedPeriod, setSelectedPeriod, dateRange } = usePeriodFilter('30_DAYS');
 
   // Form state
   const [form, setForm] = useState<ExpenseRequest>({
@@ -58,8 +64,9 @@ export default function ExpensesPage() {
     category: 'FOOD',
     paymentMethod: 'PIX',
     date: new Date().toISOString().split('T')[0],
+    dueDate: new Date().toISOString().split('T')[0],
     recurrence: 'ONCE',
-    isPaid: true,
+    isPaid: DEFAULT_EXPENSE_IS_PAID,
     notes: '',
   });
 
@@ -98,6 +105,7 @@ export default function ExpensesPage() {
         category: expense.category,
         paymentMethod: expense.paymentMethod,
         date: expense.date,
+        dueDate: expense.dueDate,
         recurrence: expense.recurrence,
         isPaid: expense.isPaid,
         notes: expense.notes || '',
@@ -110,8 +118,9 @@ export default function ExpensesPage() {
         category: 'FOOD',
         paymentMethod: 'PIX',
         date: new Date().toISOString().split('T')[0],
+        dueDate: new Date().toISOString().split('T')[0],
         recurrence: 'ONCE',
-        isPaid: true,
+        isPaid: DEFAULT_EXPENSE_IS_PAID,
         notes: '',
       });
     }
@@ -168,10 +177,23 @@ export default function ExpensesPage() {
     }
   };
 
-  const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-  const pendingExpense = expenses
-    .filter((e) => !e.isPaid)
-    .reduce((sum, e) => sum + e.amount, 0);
+  const filteredExpenses = expenses
+    .filter((expense) => shouldShowRecurringItem(expense, dateRange, 'dueDate'))
+    .sort((a, b) => {
+      if (!a.isPaid && b.isPaid) return -1;
+      if (a.isPaid && !b.isPaid) return 1;
+      if (!a.isPaid && !b.isPaid && a.recurrence !== 'ONCE' && b.recurrence === 'ONCE') return -1;
+      if (!a.isPaid && !b.isPaid && a.recurrence === 'ONCE' && b.recurrence !== 'ONCE') return 1;
+      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+    });
+
+  const totalExpense = calculateRecurringTotal(filteredExpenses, dateRange, 'dueDate');
+
+  const pendingExpense = calculateRecurringTotal(
+    filteredExpenses.filter((e) => !e.isPaid),
+    dateRange,
+    'dueDate'
+  );
 
   if (loading) {
     return <Loading message="Carregando despesas..." />;
@@ -203,7 +225,7 @@ export default function ExpensesPage() {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <Box
                   sx={{
                     width: 56,
@@ -218,7 +240,7 @@ export default function ExpensesPage() {
                 >
                   <TrendingDown sx={{ fontSize: 28 }} />
                 </Box>
-                <Box>
+                <Box flex={1}>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     Total de Despesas
                   </Typography>
@@ -226,7 +248,13 @@ export default function ExpensesPage() {
                     {formatCurrency(totalExpense)}
                   </Typography>
                 </Box>
-                <Chip label={`${expenses.length} registros`} variant="outlined" sx={{ ml: 'auto' }} />
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Chip label={`${filteredExpenses.length} registros`} variant="outlined" />
+                <PeriodFilterSelect
+                  value={selectedPeriod}
+                  onChange={setSelectedPeriod}
+                />
               </Box>
             </CardContent>
           </Card>
@@ -234,7 +262,7 @@ export default function ExpensesPage() {
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
                 <Box
                   sx={{
                     width: 56,
@@ -249,7 +277,7 @@ export default function ExpensesPage() {
                 >
                   <Schedule sx={{ fontSize: 28 }} />
                 </Box>
-                <Box>
+                <Box flex={1}>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                     Pendentes
                   </Typography>
@@ -257,11 +285,12 @@ export default function ExpensesPage() {
                     {formatCurrency(pendingExpense)}
                   </Typography>
                 </Box>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Chip
-                  label={`${expenses.filter((e) => !e.isPaid).length} a pagar`}
+                  label={`${filteredExpenses.filter((e) => !e.isPaid).length} a pagar`}
                   variant="outlined"
                   color="warning"
-                  sx={{ ml: 'auto' }}
                 />
               </Box>
             </CardContent>
@@ -270,10 +299,10 @@ export default function ExpensesPage() {
       </Grid>
 
       {/* Table */}
-      {expenses.length === 0 ? (
+      {filteredExpenses.length === 0 ? (
         <EmptyState
-          title="Nenhuma despesa cadastrada"
-          description="Comece adicionando sua primeira despesa para controlar seus gastos."
+          title="Nenhuma despesa encontrada"
+          description="Não há despesas no período selecionado. Tente ajustar o filtro ou adicione uma nova despesa."
           actionLabel="Adicionar Despesa"
           onAction={() => handleOpenDialog()}
         />
@@ -286,14 +315,14 @@ export default function ExpensesPage() {
                   <TableCell>Descrição</TableCell>
                   <TableCell>Categoria</TableCell>
                   <TableCell>Pagamento</TableCell>
-                  <TableCell>Data</TableCell>
+                  <TableCell>Vencimento</TableCell>
                   <TableCell align="center">Status</TableCell>
                   <TableCell align="right">Valor</TableCell>
                   <TableCell align="center">Ações</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {expenses.map((expense) => (
+                {filteredExpenses.map((expense) => (
                   <TableRow key={expense.id} hover>
                     <TableCell>
                       <Typography variant="body2" sx={{ fontWeight: 500 }}>
@@ -313,7 +342,7 @@ export default function ExpensesPage() {
                       />
                     </TableCell>
                     <TableCell>{expense.paymentMethodDisplayName}</TableCell>
-                    <TableCell>{formatDate(expense.date)}</TableCell>
+                    <TableCell>{formatDate(expense.dueDate)}</TableCell>
                     <TableCell align="center">
                       <Tooltip title={expense.isPaid ? 'Marcar como pendente' : 'Marcar como pago'}>
                         <Chip
@@ -416,9 +445,9 @@ export default function ExpensesPage() {
                 <TextField
                   fullWidth
                   type="date"
-                  label="Data"
-                  value={form.date}
-                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  label="Vencimento"
+                  value={form.dueDate}
+                  onChange={(e) => setForm({ ...form, dueDate: e.target.value, date: e.target.value })}
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>

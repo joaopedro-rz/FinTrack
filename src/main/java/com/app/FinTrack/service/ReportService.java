@@ -67,7 +67,8 @@ public class ReportService {
                             income.getCategory().getDisplayName(),
                             income.getDescription(),
                             income.getAmount(),
-                            income.getNotes()
+                            income.getNotes(),
+                            income.getCreatedAt()
                     ))
                     .collect(Collectors.toList()));
         }
@@ -84,11 +85,13 @@ public class ReportService {
                     .map(expense -> TransactionReportDTO.fromExpense(
                             expense.getId().toString(),
                             expense.getDate(),
+                            expense.getDueDate(),
                             expense.getCategory().name(),
                             expense.getCategory().getDisplayName(),
                             expense.getDescription(),
                             expense.getAmount(),
-                            expense.getNotes()
+                            expense.getNotes(),
+                            expense.getCreatedAt()
                     ))
                     .collect(Collectors.toList()));
         }

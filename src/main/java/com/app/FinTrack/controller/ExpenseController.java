@@ -175,4 +175,30 @@ public class ExpenseController {
         long count = expenseService.count(userId);
         return ResponseEntity.ok(count);
     }
+
+    /**
+     * Busca despesas por período de vencimento com ordenação prioritária.
+     * Ordem: 1) Pendentes, 2) Recorrentes, 3) Pagas
+     */
+    @GetMapping("/due-date/period")
+    public ResponseEntity<List<ExpenseResponseDTO>> findByDueDatePeriod(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        UUID userId = authUtils.getCurrentUserId();
+        List<ExpenseResponseDTO> response = expenseService.findByDueDatePeriodWithPriority(userId, startDate, endDate);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Busca despesas por período de vencimento e status de pagamento.
+     */
+    @GetMapping("/due-date/status")
+    public ResponseEntity<List<ExpenseResponseDTO>> findByDueDateAndStatus(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam Boolean isPaid) {
+        UUID userId = authUtils.getCurrentUserId();
+        List<ExpenseResponseDTO> response = expenseService.findByDueDateAndStatus(userId, isPaid, startDate, endDate);
+        return ResponseEntity.ok(response);
+    }
 }

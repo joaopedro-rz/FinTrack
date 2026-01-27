@@ -1,16 +1,5 @@
 import { createTheme, alpha } from '@mui/material/styles';
 
-/**
- * 🎨 TEMA FINTRACK
- *
- * Paleta de cores inspirada em:
- * - Azul escuro (Slate): Confiança, tecnologia, segurança
- * - Verde (Emerald): Crescimento, dinheiro, sucesso
- * - Vermelho suave: Alertas, despesas
- *
- * Design: Minimalista, sofisticado, moderno
- */
-
 // Cores principais
 const colors = {
   // Azul Slate - Cor principal (tecnologia, confiança)
@@ -47,7 +36,7 @@ const colors = {
     100: '#F1F5F9',
     200: '#E2E8F0',
     300: '#CBD5E1',
-    350: '#B0BAC9',  // Intermediário entre 300 e 400 para bordas mais visíveis
+    350: '#B0BAC9',
     400: '#94A3B8',
     500: '#64748B',
     600: '#475569',
@@ -253,14 +242,14 @@ export const lightTheme = createTheme({
       styleOverrides: {
         root: {
           boxShadow: '0px 1px 3px rgba(15, 23, 42, 0.08)',
-          borderBottom: `1px solid ${colors.grey[350]}`, // Linha de separação visível
+          borderBottom: `1px solid ${colors.grey[350]}`,
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          borderRight: `1px solid ${colors.grey[350]}`, // Borda visível no modo claro
+          borderRight: `1px solid ${colors.grey[350]}`,
         },
       },
     },
@@ -283,7 +272,7 @@ export const lightTheme = createTheme({
         head: {
           fontWeight: 600,
           backgroundColor: colors.grey[50],
-          borderBottom: `2px solid ${colors.grey[350]}`, // Linha de separação mais visível
+          borderBottom: `2px solid ${colors.grey[350]}`,
         },
       },
     },
