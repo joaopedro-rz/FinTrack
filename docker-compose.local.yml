@@ -1,0 +1,42 @@
+# =====================================================
+# Docker Compose - FinTrack (DESENVOLVIMENTO LOCAL)
+# Para desenvolvimento local com PostgreSQL local
+# =====================================================
+#
+# COMANDOS:
+# Subir apenas o banco local:  docker-compose -f docker-compose.local.yml up -d
+# Parar:                        docker-compose -f docker-compose.local.yml down
+#
+# =====================================================
+
+services:
+  # ==================== BANCO DE DADOS LOCAL ====================
+  postgres:
+    image: postgres:16-alpine
+    container_name: fintrack-postgres-local
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fintrack_db
+      POSTGRES_USER: fintrack_user
+      POSTGRES_PASSWORD: fintrack_password
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_local:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fintrack_user -d fintrack_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - fintrack-network
+
+volumes:
+  postgres_data_local:
+    driver: local
+
+networks:
+  fintrack-network:
+    driver: bridge

@@ -28,7 +28,7 @@ export const authService = {
   },
 };
 
-// INCOME
+// ==================== INCOME ====================
 export const incomeService = {
   getAll: async (): Promise<Income[]> => {
     const response = await api.get<Income[]>('/incomes');
@@ -74,7 +74,7 @@ export const incomeService = {
   },
 };
 
-// EXPENSE
+// ==================== EXPENSE ====================
 export const expenseService = {
   getAll: async (): Promise<Expense[]> => {
     const response = await api.get<Expense[]>('/expenses');
@@ -142,7 +142,7 @@ export const expenseService = {
   },
 };
 
-//  INVESTMENT
+// ==================== INVESTMENT ====================
 export const investmentService = {
   getAll: async (): Promise<Investment[]> => {
     const response = await api.get<Investment[]>('/investments');
@@ -186,7 +186,7 @@ export const investmentService = {
   },
 };
 
-// DASHBOARD
+// ==================== DASHBOARD ====================
 export const dashboardService = {
   get: async (): Promise<Dashboard> => {
     const response = await api.get<Dashboard>('/dashboard');
@@ -213,7 +213,7 @@ export const dashboardService = {
   },
 };
 
-// ENUMS
+// ==================== ENUMS ====================
 export const enumService = {
   getAll: async (): Promise<AllEnums> => {
     const response = await api.get<AllEnums>('/enums/all');
@@ -221,10 +221,11 @@ export const enumService = {
   },
 };
 
-//  REPORTS
+// ==================== REPORTS ====================
 export const reportService = {
-
-   // Busca relatório de transações com filtros.
+  /**
+   * Busca relatório de transações com filtros.
+   */
   getTransactions: async (filters: ReportFilters): Promise<ReportSummary> => {
     const response = await api.get<ReportSummary>('/reports/transactions', {
       params: {
@@ -236,7 +237,9 @@ export const reportService = {
     return response.data;
   },
 
-  //Faz download do relatório em PDF.
+  /**
+   * Faz download do relatório em PDF.
+   */
   downloadPdf: async (filters: ReportFilters): Promise<Blob> => {
     const response = await api.get('/reports/transactions/pdf', {
       params: {
@@ -249,7 +252,9 @@ export const reportService = {
     return response.data;
   },
 
-  //Faz download do relatório em Excel.
+  /**
+   * Faz download do relatório em Excel.
+   */
   downloadExcel: async (filters: ReportFilters): Promise<Blob> => {
     const response = await api.get('/reports/transactions/excel', {
       params: {
@@ -262,7 +267,9 @@ export const reportService = {
     return response.data;
   },
 
-   //Relatório do mês atual.
+  /**
+   * Relatório do mês atual.
+   */
   getCurrentMonth: async (type: 'ALL' | 'INCOME' | 'EXPENSE' = 'ALL'): Promise<ReportSummary> => {
     const response = await api.get<ReportSummary>('/reports/current-month', {
       params: { type },
@@ -270,7 +277,9 @@ export const reportService = {
     return response.data;
   },
 
-  //Relatório dos últimos 30 dias.
+  /**
+   * Relatório dos últimos 30 dias.
+   */
   getLast30Days: async (type: 'ALL' | 'INCOME' | 'EXPENSE' = 'ALL'): Promise<ReportSummary> => {
     const response = await api.get<ReportSummary>('/reports/last-30-days', {
       params: { type },

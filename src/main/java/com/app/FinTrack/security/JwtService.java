@@ -45,29 +45,20 @@ public class JwtService {
 
     /**
      * Valida a configuração JWT na inicialização.
-     * Alerta se usando secret de desenvolvimento.
      */
     @PostConstruct
     public void validateConfiguration() {
         if (jwtSecret.length() < MIN_SECRET_LENGTH) {
             throw new IllegalStateException(
-                "JWT secret deve ter pelo menos " + MIN_SECRET_LENGTH + " caracteres para segurança adequada"
+                "JWT secret deve ter pelo menos " + MIN_SECRET_LENGTH + " caracteres"
             );
         }
 
         if (jwtSecret.startsWith(DEV_SECRET_PREFIX)) {
-            log.warn("===========================================");
-            log.warn("⚠️  ATENÇÃO: Usando JWT secret de DESENVOLVIMENTO!");
-            log.warn("⚠️  NÃO use em produção!");
-            log.warn("⚠️  Para produção, defina: export JWT_SECRET=$(openssl rand -base64 32)");
-            log.warn("===========================================");
-        } else {
-            log.info("✅ JWT configurado com secret personalizado");
+            log.error("JWT secret de desenvolvimento detectado! NÃO use em produção!");
         }
 
-        log.info("JWT expiração: {} segundos ({} horas)",
-            jwtExpiration / 1000,
-            jwtExpiration / 3600000);
+        log.debug("JWT expiração configurada: {} ms", jwtExpiration);
     }
 
     private SecretKey getSigningKey() {

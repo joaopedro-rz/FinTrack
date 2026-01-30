@@ -30,7 +30,7 @@ import {
   TrendingUp,
 } from '@mui/icons-material';
 import { incomeService, enumService } from '@/services';
-import { formatCurrency, formatDate } from '@/utils/formatters';
+import { formatCurrency, formatDate, getTodayISOString } from '@/utils/formatters';
 import { calculateRecurringTotal, shouldShowRecurringItem } from '@/utils/recurringCalculations';
 import Loading from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
@@ -38,6 +38,49 @@ import ConfirmDialog from '@/components/common/ConfirmDialog';
 import PeriodFilterSelect from '@/components/common/PeriodFilterSelect';
 import { usePeriodFilter } from '@/hooks';
 import type { Income, IncomeRequest, EnumOption } from '@/types';
+
+const getRecurrenceLabels = (recurrence: string) => {
+  const labels = {
+    ONCE: {
+      label: 'Data do Recebimento',
+      helper: 'Data única do recebimento'
+    },
+    DAILY: {
+      label: 'Data de Início (Diária)',
+      helper: 'Esta receita será contabilizada diariamente a partir desta data'
+    },
+    WEEKLY: {
+      label: 'Data de Início (Semanal)',
+      helper: 'Esta receita será contabilizada semanalmente a partir desta data'
+    },
+    BIWEEKLY: {
+      label: 'Data de Início (Quinzenal)',
+      helper: 'Esta receita será contabilizada quinzenalmente a partir desta data'
+    },
+    MONTHLY: {
+      label: 'Data de Recebimento (Mensal)',
+      helper: 'Esta receita será contabilizada mensalmente a partir desta data'
+    },
+    BIMONTHLY: {
+      label: 'Data de Início (Bimestral)',
+      helper: 'Esta receita será contabilizada bimestralmente a partir desta data'
+    },
+    QUARTERLY: {
+      label: 'Data de Início (Trimestral)',
+      helper: 'Esta receita será contabilizada trimestralmente a partir desta data'
+    },
+    SEMIANNUAL: {
+      label: 'Data de Início (Semestral)',
+      helper: 'Esta receita será contabilizada semestralmente a partir desta data'
+    },
+    ANNUAL: {
+      label: 'Data de Início (Anual)',
+      helper: 'Esta receita será contabilizada anualmente a partir desta data'
+    },
+  };
+
+  return labels[recurrence as keyof typeof labels] || labels.ONCE;
+};
 
 export default function IncomesPage() {
   const [incomes, setIncomes] = useState<Income[]>([]);
@@ -55,7 +98,7 @@ export default function IncomesPage() {
     description: '',
     amount: 0,
     category: 'SALARY',
-    date: new Date().toISOString().split('T')[0],
+    date: getTodayISOString(),
     recurrence: 'ONCE',
     notes: '',
   });
@@ -102,7 +145,7 @@ export default function IncomesPage() {
         description: '',
         amount: 0,
         category: 'SALARY',
-        date: new Date().toISOString().split('T')[0],
+        date: getTodayISOString(),
         recurrence: 'ONCE',
         notes: '',
       });
@@ -355,16 +398,12 @@ export default function IncomesPage() {
             <TextField
               fullWidth
               type="date"
-              label={form.recurrence === 'ONCE' ? 'Data do Recebimento' : 'Data de Recebimento (Mensal)'}
+              label={getRecurrenceLabels(form.recurrence || 'ONCE').label}
               value={form.date}
               onChange={(e) => setForm({ ...form, date: e.target.value })}
               InputLabelProps={{ shrink: true }}
               sx={{ mb: 2.5 }}
-              helperText={
-                form.recurrence !== 'ONCE'
-                  ? 'Esta receita será contabilizada mensalmente a partir desta data'
-                  : 'Data única do recebimento'
-              }
+              helperText={getRecurrenceLabels(form.recurrence || 'ONCE').helper}
             />
             <TextField
               fullWidth

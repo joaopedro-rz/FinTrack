@@ -36,6 +36,16 @@ public class ExpenseService {
         log.info("Criando despesa para usuário: {}", userId);
         User user = findUserById(userId);
 
+        // Validação: Despesas recorrentes não podem ter vencimento em meses anteriores
+        if (request.recurrence() != null && request.recurrence() != RecurrenceType.ONCE) {
+            YearMonth currentYearMonth = YearMonth.now();
+            YearMonth dueYearMonth = YearMonth.from(request.dueDate());
+
+            if (dueYearMonth.isBefore(currentYearMonth)) {
+                throw new IllegalArgumentException("Despesas recorrentes não podem ter vencimento em meses anteriores. Use o mês atual ou futuro.");
+            }
+        }
+
         Expense expense = Expense.builder()
                 .user(user)
                 .description(request.description())
@@ -55,10 +65,34 @@ public class ExpenseService {
     }
 
     public List<ExpenseResponseDTO> findAllByUser(UUID userId) {
+        updateRecurringExpensesStatus(userId);
         return expenseRepository.findByUserIdOrderByDateDesc(userId)
                 .stream()
                 .map(ExpenseResponseDTO::fromEntity)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void updateRecurringExpensesStatus(UUID userId) {
+        List<Expense> recurringExpenses = expenseRepository.findByUserIdOrderByDateDesc(userId)
+                .stream()
+                .filter(expense -> expense.getRecurrence() != null && expense.getRecurrence() != RecurrenceType.ONCE)
+                .filter(Expense::getIsPaid)
+                .toList();
+
+        YearMonth currentYearMonth = YearMonth.now();
+
+        for (Expense expense : recurringExpenses) {
+            YearMonth dueYearMonth = YearMonth.from(expense.getDueDate());
+
+            if (dueYearMonth.isBefore(currentYearMonth)) {
+                LocalDate nextDueDate = calculateNextDueDate(expense.getDueDate(), expense.getRecurrence());
+                expense.setDueDate(nextDueDate);
+                expense.setIsPaid(false);
+                expenseRepository.save(expense);
+                log.info("Despesa recorrente {} resetada para o novo mês. Vencimento: {}", expense.getId(), nextDueDate);
+            }
+        }
     }
 
     public ExpenseResponseDTO findById(UUID userId, UUID expenseId) {
@@ -131,21 +165,7 @@ public class ExpenseService {
     public ExpenseResponseDTO markAsPaid(UUID userId, UUID expenseId) {
         Expense expense = findExpenseByIdAndUser(expenseId, userId);
         expense.setIsPaid(true);
-
-        if (expense.getRecurrence() != null && expense.getRecurrence() != RecurrenceType.ONCE) {
-            LocalDate nextDueDate = calculateNextDueDate(expense.getDueDate(), expense.getRecurrence());
-            expense.setDueDate(nextDueDate);
-
-            YearMonth currentYearMonth = YearMonth.now();
-            YearMonth dueYearMonth = YearMonth.from(expense.getDueDate());
-
-            if (!dueYearMonth.equals(currentYearMonth)) {
-                expense.setIsPaid(false);
-            }
-
-            log.info("Despesa recorrente atualizada. Próximo vencimento: {}", nextDueDate);
-        }
-
+        log.info("Despesa {} marcada como paga", expenseId);
         return ExpenseResponseDTO.fromEntity(expenseRepository.save(expense));
     }
 
@@ -175,7 +195,7 @@ public class ExpenseService {
     }
 
     public BigDecimal getTotalAmountByPeriod(UUID userId, LocalDate startDate, LocalDate endDate) {
-        return expenseRepository.sumAmountByUserIdAndDateBetween(userId, startDate, endDate);
+        return expenseRepository.sumAmountByUserIdAndDueDateBetween(userId, startDate, endDate);
     }
 
     public BigDecimal getTotalPending(UUID userId) {

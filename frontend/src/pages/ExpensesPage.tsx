@@ -34,7 +34,7 @@ import {
   Schedule,
 } from '@mui/icons-material';
 import { expenseService, enumService } from '@/services';
-import { formatCurrency, formatDate } from '@/utils/formatters';
+import { formatCurrency, formatDate, getTodayISOString } from '@/utils/formatters';
 import { calculateRecurringTotal, shouldShowRecurringItem } from '@/utils/recurringCalculations';
 import Loading from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
@@ -63,12 +63,15 @@ export default function ExpensesPage() {
     amount: 0,
     category: 'FOOD',
     paymentMethod: 'PIX',
-    date: new Date().toISOString().split('T')[0],
-    dueDate: new Date().toISOString().split('T')[0],
+    date: getTodayISOString(),
+    dueDate: getTodayISOString(),
     recurrence: 'ONCE',
     isPaid: DEFAULT_EXPENSE_IS_PAID,
     notes: '',
   });
+
+  // Controla se a despesa tem vencimento
+  const [hasDeadline, setHasDeadline] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -110,6 +113,8 @@ export default function ExpensesPage() {
         isPaid: expense.isPaid,
         notes: expense.notes || '',
       });
+      // Define hasDeadline baseado se a despesa tem vencimento definido ou é recorrente
+      setHasDeadline(expense.recurrence !== 'ONCE' || !!expense.dueDate);
     } else {
       setEditingExpense(null);
       setForm({
@@ -117,12 +122,13 @@ export default function ExpensesPage() {
         amount: 0,
         category: 'FOOD',
         paymentMethod: 'PIX',
-        date: new Date().toISOString().split('T')[0],
-        dueDate: new Date().toISOString().split('T')[0],
+        date: getTodayISOString(),
+        dueDate: getTodayISOString(),
         recurrence: 'ONCE',
         isPaid: DEFAULT_EXPENSE_IS_PAID,
         notes: '',
       });
+      setHasDeadline(false);
     }
     setDialogOpen(true);
   };
@@ -134,15 +140,40 @@ export default function ExpensesPage() {
 
   const handleSubmit = async () => {
     try {
+      // Se não tem vencimento, garante que dueDate = date
+      const dataToSubmit = {
+        ...form,
+        dueDate: hasDeadline ? form.dueDate : form.date
+      };
+
+      // Validação: Despesas recorrentes não podem ter vencimento em meses anteriores
+      if (dataToSubmit.recurrence !== 'ONCE') {
+        const today = new Date();
+
+        // Parse da data de vencimento como data local (evita problemas de fuso horário)
+        const [year, month, day] = dataToSubmit.dueDate.split('-').map(Number);
+        const dueDate = new Date(year, month - 1, day);
+
+        // Compara apenas ano e mês (permite qualquer dia do mês atual)
+        const currentYearMonth = today.getFullYear() * 12 + today.getMonth();
+        const dueYearMonth = dueDate.getFullYear() * 12 + dueDate.getMonth();
+
+        if (dueYearMonth < currentYearMonth) {
+          alert('Despesas recorrentes não podem ter vencimento em meses anteriores. Use o mês atual ou futuro.');
+          return;
+        }
+      }
+
       if (editingExpense) {
-        await expenseService.update(editingExpense.id, form);
+        await expenseService.update(editingExpense.id, dataToSubmit);
       } else {
-        await expenseService.create(form);
+        await expenseService.create(dataToSubmit);
       }
       handleCloseDialog();
       loadData();
     } catch (error) {
       console.error('Erro ao salvar despesa:', error);
+      alert('Erro ao salvar despesa. Verifique os campos e tente novamente.');
     }
   };
 
@@ -178,21 +209,21 @@ export default function ExpensesPage() {
   };
 
   const filteredExpenses = expenses
-    .filter((expense) => shouldShowRecurringItem(expense, dateRange, 'dueDate'))
+    .filter((expense) => shouldShowRecurringItem(expense, dateRange, 'date'))
     .sort((a, b) => {
       if (!a.isPaid && b.isPaid) return -1;
       if (a.isPaid && !b.isPaid) return 1;
       if (!a.isPaid && !b.isPaid && a.recurrence !== 'ONCE' && b.recurrence === 'ONCE') return -1;
       if (!a.isPaid && !b.isPaid && a.recurrence === 'ONCE' && b.recurrence !== 'ONCE') return 1;
-      return new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime();
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
     });
 
-  const totalExpense = calculateRecurringTotal(filteredExpenses, dateRange, 'dueDate');
+  const totalExpense = calculateRecurringTotal(filteredExpenses, dateRange, 'date');
 
   const pendingExpense = calculateRecurringTotal(
     filteredExpenses.filter((e) => !e.isPaid),
     dateRange,
-    'dueDate'
+    'date'
   );
 
   if (loading) {
@@ -315,7 +346,7 @@ export default function ExpensesPage() {
                   <TableCell>Descrição</TableCell>
                   <TableCell>Categoria</TableCell>
                   <TableCell>Pagamento</TableCell>
-                  <TableCell>Vencimento</TableCell>
+                  <TableCell>Data de Pagamento</TableCell>
                   <TableCell align="center">Status</TableCell>
                   <TableCell align="right">Valor</TableCell>
                   <TableCell align="center">Ações</TableCell>
@@ -342,7 +373,7 @@ export default function ExpensesPage() {
                       />
                     </TableCell>
                     <TableCell>{expense.paymentMethodDisplayName}</TableCell>
-                    <TableCell>{formatDate(expense.dueDate)}</TableCell>
+                    <TableCell>{formatDate(expense.date)}</TableCell>
                     <TableCell align="center">
                       <Tooltip title={expense.isPaid ? 'Marcar como pendente' : 'Marcar como pago'}>
                         <Chip
@@ -440,43 +471,103 @@ export default function ExpensesPage() {
                 </TextField>
               </Grid>
             </Grid>
-            <Grid container spacing={2} sx={{ mb: 2.5 }}>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  type="date"
-                  label="Vencimento"
-                  value={form.dueDate}
-                  onChange={(e) => setForm({ ...form, dueDate: e.target.value, date: e.target.value })}
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Recorrência"
-                  value={form.recurrence}
-                  onChange={(e) => setForm({ ...form, recurrence: e.target.value as any })}
-                >
-                  {recurrenceTypes.map((rec) => (
-                    <MenuItem key={rec.value} value={rec.value}>
-                      {rec.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Grid>
-            </Grid>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={form.isPaid}
-                  onChange={(e) => setForm({ ...form, isPaid: e.target.checked })}
-                />
-              }
-              label="Já foi pago"
-              sx={{ mb: 2 }}
+
+            {/* Data de Pagamento */}
+            <TextField
+              fullWidth
+              type="date"
+              label="Data de Pagamento"
+              value={form.date}
+              onChange={(e) => {
+                const newDate = e.target.value;
+                // Se não tem vencimento definido, sincroniza dueDate com date
+                if (!hasDeadline) {
+                  setForm({ ...form, date: newDate, dueDate: newDate });
+                } else {
+                  setForm({ ...form, date: newDate });
+                }
+              }}
+              InputLabelProps={{ shrink: true }}
+              sx={{ mb: 2.5 }}
+              helperText="Data em que a despesa foi realizada"
             />
+
+            {/* Recorrência */}
+            <TextField
+              fullWidth
+              select
+              label="Recorrência"
+              value={form.recurrence}
+              onChange={(e) => {
+                const newRecurrence = e.target.value as any;
+                setForm({ ...form, recurrence: newRecurrence });
+                // Auto-ativa vencimento quando seleciona recorrência
+                if (newRecurrence !== 'ONCE') {
+                  setHasDeadline(true);
+                }
+              }}
+              sx={{ mb: 2.5 }}
+            >
+              {recurrenceTypes.map((rec) => (
+                <MenuItem key={rec.value} value={rec.value}>
+                  {rec.label}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            {/* Toggles: Já foi pago & Tem vencimento? */}
+            <Box sx={{ display: 'flex', gap: 3, mb: 2 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={form.isPaid}
+                    onChange={(e) => setForm({ ...form, isPaid: e.target.checked })}
+                  />
+                }
+                label="Já foi pago"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={hasDeadline}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setHasDeadline(checked);
+                      // Se desabilitar vencimento e não for recorrente, usa data de pagamento como vencimento
+                      if (!checked && form.recurrence === 'ONCE') {
+                        setForm({ ...form, dueDate: form.date });
+                      }
+                    }}
+                    disabled={form.recurrence !== 'ONCE'}
+                  />
+                }
+                label="Tem vencimento?"
+              />
+            </Box>
+
+            {/* Campo de Vencimento (condicional) */}
+            {hasDeadline && (
+              <TextField
+                fullWidth
+                type="date"
+                label="Data de Vencimento"
+                value={form.dueDate}
+                onChange={(e) => setForm({ ...form, dueDate: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+                sx={{ mb: 2.5 }}
+                inputProps={{
+                  min: form.recurrence !== 'ONCE'
+                    ? `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`
+                    : undefined
+                }}
+                helperText={
+                  form.recurrence !== 'ONCE'
+                    ? 'Obrigatório para despesas recorrentes'
+                    : 'Data limite para pagamento'
+                }
+              />
+            )}
+
             <TextField
               fullWidth
               label="Observações"

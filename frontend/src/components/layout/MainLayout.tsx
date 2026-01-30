@@ -85,7 +85,7 @@ export default function MainLayout() {
 
   const drawer = (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-
+      {/* Logo */}
       <Box
         sx={{
           p: 3,
@@ -126,7 +126,7 @@ export default function MainLayout() {
 
       <Divider sx={{ mx: 2 }} />
 
-
+      {/* Menu Items */}
       <List sx={{ px: 1, py: 2, flex: 1 }}>
         {menuItems.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
@@ -166,7 +166,7 @@ export default function MainLayout() {
         ))}
       </List>
 
-
+      {/* User Info */}
       <Divider sx={{ mx: 2 }} />
       <Box sx={{ p: 2 }}>
         <Box
@@ -216,7 +216,7 @@ export default function MainLayout() {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-
+      {/* AppBar */}
       <AppBar
         position="fixed"
         elevation={0}
@@ -241,14 +241,14 @@ export default function MainLayout() {
 
           <Box sx={{ flex: 1 }} />
 
-
+          {/* Theme Toggle */}
           <Tooltip title={mode === 'light' ? 'Modo escuro' : 'Modo claro'}>
             <IconButton onClick={toggleTheme} sx={{ color: 'text.secondary' }}>
               {mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
             </IconButton>
           </Tooltip>
 
-
+          {/* User Menu */}
           <Tooltip title="Conta">
             <IconButton onClick={handleMenuOpen} sx={{ ml: 1 }}>
               <Avatar
@@ -292,12 +292,12 @@ export default function MainLayout() {
         </Toolbar>
       </AppBar>
 
-
+      {/* Sidebar */}
       <Box
         component="nav"
         sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }}
       >
-
+        {/* Mobile Drawer */}
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -314,7 +314,7 @@ export default function MainLayout() {
           {drawer}
         </Drawer>
 
-
+        {/* Desktop Drawer */}
         <Drawer
           variant="permanent"
           sx={{
@@ -330,7 +330,7 @@ export default function MainLayout() {
         </Drawer>
       </Box>
 
-
+      {/* Main Content */}
       <Box
         component="main"
         sx={{

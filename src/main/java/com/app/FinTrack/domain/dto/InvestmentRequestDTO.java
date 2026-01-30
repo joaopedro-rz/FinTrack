@@ -44,6 +44,9 @@ public record InvestmentRequestDTO(
         @Size(max = 1000, message = "Notas devem ter no máximo 1000 caracteres")
         String notes
 ) {
+    /**
+     * Construtor que define valores padrão para campos opcionais.
+     */
     public InvestmentRequestDTO {
         if (quantity == null) {
             quantity = BigDecimal.ONE;

@@ -26,7 +26,7 @@ import {
   TrendingDown,
 } from '@mui/icons-material';
 import { investmentService, enumService } from '@/services';
-import { formatCurrency, formatPercentage } from '@/utils/formatters';
+import { formatCurrency, formatPercentage, getTodayISOString } from '@/utils/formatters';
 import Loading from '@/components/common/Loading';
 import EmptyState from '@/components/common/EmptyState';
 import ConfirmDialog from '@/components/common/ConfirmDialog';
@@ -49,7 +49,7 @@ export default function InvestmentsPage() {
     quantity: 1,
     purchasePrice: 0,
     currentPrice: 0,
-    purchaseDate: new Date().toISOString().split('T')[0],
+    purchaseDate: getTodayISOString(),
     broker: '',
     notes: '',
   });
@@ -101,7 +101,7 @@ export default function InvestmentsPage() {
         quantity: 1,
         purchasePrice: 0,
         currentPrice: 0,
-        purchaseDate: new Date().toISOString().split('T')[0],
+        purchaseDate: getTodayISOString(),
         broker: '',
         notes: '',
       });
@@ -126,31 +126,6 @@ export default function InvestmentsPage() {
     } catch (error) {
       console.error('Erro ao salvar investimento:', error);
     }
-  };
-
-  const getInvestmentCategory = (type: string): 'fixed_income' | 'stocks' | 'funds' | 'crypto' | 'other' => {
-    const fixedIncome = ['SAVINGS', 'CDB', 'LCI_LCA', 'TREASURY', 'DEBENTURES'];
-    const stocks = ['STOCKS', 'REITS', 'BDRS'];
-    const funds = ['ETFS', 'INVESTMENT_FUND', 'PENSION'];
-    const crypto = ['CRYPTO'];
-
-    if (fixedIncome.includes(type)) return 'fixed_income';
-    if (stocks.includes(type)) return 'stocks';
-    if (funds.includes(type)) return 'funds';
-    if (crypto.includes(type)) return 'crypto';
-    return 'other';
-  };
-
-  const handleTypeChange = (newType: string) => {
-    setForm({
-      ...form,
-      type: newType as any,
-      ticker: '',
-      quantity: 1,
-      purchasePrice: 0,
-      currentPrice: 0,
-      broker: '',
-    });
   };
 
   const handleDelete = async (id: string) => {
@@ -424,31 +399,29 @@ export default function InvestmentsPage() {
       )}
 
       {/* Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="md" fullWidth>
+      <Dialog open={dialogOpen} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
         <DialogTitle>
           {editingInvestment ? 'Editar Investimento' : 'Novo Investimento'}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
-            {/* Nome e Tipo */}
+            <TextField
+              fullWidth
+              label="Nome do Investimento"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              sx={{ mb: 2.5 }}
+              required
+              placeholder="Ex: Petrobras PN, Tesouro Selic 2029"
+            />
             <Grid container spacing={2} sx={{ mb: 2.5 }}>
-              <Grid item xs={8}>
-                <TextField
-                  fullWidth
-                  label="Nome do Investimento"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  required
-                  placeholder="Ex: Petrobras PN, Tesouro Selic 2029, CDB Inter"
-                />
-              </Grid>
-              <Grid item xs={4}>
+              <Grid item xs={6}>
                 <TextField
                   fullWidth
                   select
                   label="Tipo"
                   value={form.type}
-                  onChange={(e) => handleTypeChange(e.target.value)}
+                  onChange={(e) => setForm({ ...form, type: e.target.value as any })}
                 >
                   {investmentTypes.map((type) => (
                     <MenuItem key={type.value} value={type.value}>
@@ -457,360 +430,84 @@ export default function InvestmentsPage() {
                   ))}
                 </TextField>
               </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Ticker/Código"
+                  value={form.ticker}
+                  onChange={(e) => setForm({ ...form, ticker: e.target.value.toUpperCase() })}
+                  placeholder="Ex: PETR4, BTCUSD"
+                />
+              </Grid>
             </Grid>
-
-            {/* Formulário para RENDA FIXA */}
-            {getInvestmentCategory(form.type) === 'fixed_income' && (
-              <>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Valor Investido"
-                      type="number"
-                      value={form.purchasePrice === 0 ? '' : form.purchasePrice}
-                      onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0, quantity: 1 })}
-                      required
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Valor Atual"
-                      type="number"
-                      value={form.currentPrice === 0 ? '' : form.currentPrice}
-                      onChange={(e) => setForm({ ...form, currentPrice: parseFloat(e.target.value) || 0 })}
-                      placeholder="0,00"
-                      helperText="Valor atual com rendimentos"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Data da Aplicação"
-                      value={form.purchaseDate}
-                      onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Instituição Financeira"
-                      value={form.broker}
-                      onChange={(e) => setForm({ ...form, broker: e.target.value })}
-                      placeholder="Ex: Nubank, Inter, XP"
-                    />
-                  </Grid>
-                </Grid>
-              </>
-            )}
-
-            {/* Formulário para AÇÕES */}
-            {getInvestmentCategory(form.type) === 'stocks' && (
-              <>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Ticker/Código"
-                      value={form.ticker}
-                      onChange={(e) => setForm({ ...form, ticker: e.target.value.toUpperCase() })}
-                      required
-                      placeholder="Ex: PETR4, HGLG11"
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Quantidade"
-                      type="number"
-                      value={form.quantity === 0 ? '' : form.quantity}
-                      onChange={(e) => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })}
-                      required
-                      placeholder="0"
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Preço Médio"
-                      type="number"
-                      value={form.purchasePrice === 0 ? '' : form.purchasePrice}
-                      onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
-                      required
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Preço Atual"
-                      type="number"
-                      value={form.currentPrice === 0 ? '' : form.currentPrice}
-                      onChange={(e) => setForm({ ...form, currentPrice: parseFloat(e.target.value) || 0 })}
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Data da Compra"
-                      value={form.purchaseDate}
-                      onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Corretora"
-                      value={form.broker}
-                      onChange={(e) => setForm({ ...form, broker: e.target.value })}
-                      placeholder="Ex: XP, Clear, Rico"
-                    />
-                  </Grid>
-                </Grid>
-              </>
-            )}
-
-            {/* Formulário para FUNDOS */}
-            {getInvestmentCategory(form.type) === 'funds' && (
-              <>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Código do Fundo"
-                      value={form.ticker}
-                      onChange={(e) => setForm({ ...form, ticker: e.target.value.toUpperCase() })}
-                      placeholder="Ex: BOVA11, HASH11"
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Quantidade de Cotas"
-                      type="number"
-                      value={form.quantity === 0 ? '' : form.quantity}
-                      onChange={(e) => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })}
-                      required
-                      placeholder="0"
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Valor da Cota (compra)"
-                      type="number"
-                      value={form.purchasePrice === 0 ? '' : form.purchasePrice}
-                      onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
-                      required
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Valor Atual da Cota"
-                      type="number"
-                      value={form.currentPrice === 0 ? '' : form.currentPrice}
-                      onChange={(e) => setForm({ ...form, currentPrice: parseFloat(e.target.value) || 0 })}
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Data da Aplicação"
-                      value={form.purchaseDate}
-                      onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Corretora/Banco"
-                      value={form.broker}
-                      onChange={(e) => setForm({ ...form, broker: e.target.value })}
-                      placeholder="Ex: XP, Nubank, Inter"
-                    />
-                  </Grid>
-                </Grid>
-              </>
-            )}
-
-            {/* Formulário para CRIPTOMOEDAS */}
-            {getInvestmentCategory(form.type) === 'crypto' && (
-              <>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Símbolo"
-                      value={form.ticker}
-                      onChange={(e) => setForm({ ...form, ticker: e.target.value.toUpperCase() })}
-                      required
-                      placeholder="Ex: BTC, ETH, SOL"
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Quantidade"
-                      type="number"
-                      value={form.quantity === 0 ? '' : form.quantity}
-                      onChange={(e) => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })}
-                      required
-                      placeholder="0.00000000"
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Preço Médio (R$)"
-                      type="number"
-                      value={form.purchasePrice === 0 ? '' : form.purchasePrice}
-                      onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
-                      required
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Preço Atual (R$)"
-                      type="number"
-                      value={form.currentPrice === 0 ? '' : form.currentPrice}
-                      onChange={(e) => setForm({ ...form, currentPrice: parseFloat(e.target.value) || 0 })}
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Data da Compra"
-                      value={form.purchaseDate}
-                      onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={4}>
-                    <TextField
-                      fullWidth
-                      label="Exchange"
-                      value={form.broker}
-                      onChange={(e) => setForm({ ...form, broker: e.target.value })}
-                      placeholder="Ex: Binance, Coinbase, Mercado Bitcoin"
-                    />
-                  </Grid>
-                </Grid>
-              </>
-            )}
-
-            {/* Formulário para OUTROS */}
-            {getInvestmentCategory(form.type) === 'other' && (
-              <>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Valor Investido"
-                      type="number"
-                      value={form.purchasePrice === 0 ? '' : form.purchasePrice}
-                      onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0, quantity: 1 })}
-                      required
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Valor Atual Estimado"
-                      type="number"
-                      value={form.currentPrice === 0 ? '' : form.currentPrice}
-                      onChange={(e) => setForm({ ...form, currentPrice: parseFloat(e.target.value) || 0 })}
-                      placeholder="0,00"
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
-                      }}
-                    />
-                  </Grid>
-                </Grid>
-                <Grid container spacing={2} sx={{ mb: 2.5 }}>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      type="date"
-                      label="Data da Aquisição"
-                      value={form.purchaseDate}
-                      onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={6}>
-                    <TextField
-                      fullWidth
-                      label="Referência/Local"
-                      value={form.broker}
-                      onChange={(e) => setForm({ ...form, broker: e.target.value })}
-                      placeholder="Ex: Localização, corretora, etc"
-                    />
-                  </Grid>
-                </Grid>
-              </>
-            )}
-
-            {/* Observações (comum a todos) */}
+            <Grid container spacing={2} sx={{ mb: 2.5 }}>
+              <Grid item xs={4}>
+                <TextField
+                  fullWidth
+                  label="Quantidade"
+                  type="number"
+                  value={form.quantity === 0 ? '' : form.quantity}
+                  onChange={(e) => setForm({ ...form, quantity: parseFloat(e.target.value) || 0 })}
+                  required
+                  placeholder="0"
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  fullWidth
+                  label="Preço de Compra"
+                  type="number"
+                  value={form.purchasePrice === 0 ? '' : form.purchasePrice}
+                  onChange={(e) => setForm({ ...form, purchasePrice: parseFloat(e.target.value) || 0 })}
+                  required
+                  placeholder="0,00"
+                  InputProps={{
+                    startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
+                  }}
+                />
+              </Grid>
+              <Grid item xs={4}>
+                <TextField
+                  fullWidth
+                  label="Preço Atual"
+                  type="number"
+                  value={form.currentPrice === 0 ? '' : form.currentPrice}
+                  onChange={(e) => setForm({ ...form, currentPrice: parseFloat(e.target.value) || 0 })}
+                  placeholder="0,00"
+                  InputProps={{
+                    startAdornment: <Typography sx={{ mr: 1, color: 'text.secondary' }}>R$</Typography>,
+                  }}
+                />
+              </Grid>
+            </Grid>
+            <Grid container spacing={2} sx={{ mb: 2.5 }}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Data da Compra"
+                  value={form.purchaseDate}
+                  onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Corretora"
+                  value={form.broker}
+                  onChange={(e) => setForm({ ...form, broker: e.target.value })}
+                  placeholder="Ex: XP, Clear, Nubank"
+                />
+              </Grid>
+            </Grid>
             <TextField
               fullWidth
               label="Observações"
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               multiline
-              rows={3}
-              placeholder="Informações adicionais sobre o investimento"
+              rows={2}
             />
           </Box>
         </DialogContent>

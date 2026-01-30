@@ -1,0 +1,51 @@
+# =====================================================
+# Koyeb Deployment Configuration
+# Documentação: https://www.koyeb.com/docs
+# =====================================================
+
+# Build Settings
+build:
+  type: docker
+  dockerfile: backend.Dockerfile
+  context: .
+
+# Service Settings
+service:
+  name: fintrack-api
+  ports:
+    - port: 8080
+      protocol: http
+
+  # Health Check
+  healthcheck:
+    http:
+      path: /api/health
+      port: 8080
+    grace_period: 60s
+    interval: 30s
+    timeout: 10s
+    restart_limit: 3
+
+  # Environment Variables (configurar no dashboard)
+  env:
+    - DB_HOST
+    - DB_PORT
+    - DB_NAME
+    - DB_USERNAME
+    - DB_PASSWORD
+    - DB_SSL_MODE
+    - JWT_SECRET
+    - JWT_EXPIRATION
+    - SPRING_PROFILES_ACTIVE=production
+
+  # Resources
+  instance_type: nano  # Free tier
+
+# Regions
+regions:
+  - was  # Washington (ou escolha fra para Frankfurt, sgp para Singapore)
+
+# Auto-scaling (Free tier: 1 instance)
+scaling:
+  min: 1
+  max: 1

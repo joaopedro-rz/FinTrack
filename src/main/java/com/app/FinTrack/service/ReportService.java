@@ -36,6 +36,11 @@ public class ReportService {
     /**
      * Gera relatório de transações (receitas e despesas) por período.
      *
+     * IMPORTANTE - Filtros de data:
+     * - Receitas: usa campo 'date' (data de recebimento)
+     * - Despesas: usa campo 'date' (data de CRIAÇÃO, não vencimento)
+     * Nota: Dashboard usa 'dueDate' para despesas, mas relatório usa 'date' para histórico.
+     *
      * @param userId    ID do usuário
      * @param startDate Data inicial (inclusiva)
      * @param endDate   Data final (inclusiva)

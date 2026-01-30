@@ -37,6 +37,9 @@ pnpm-debug.log*
 .env.production
 .env.production.local
 
+# ==================== DEPLOY ====================
+.vercel
+
 # ==================== SISTEMA OPERACIONAL ====================
 .DS_Store
 Thumbs.db

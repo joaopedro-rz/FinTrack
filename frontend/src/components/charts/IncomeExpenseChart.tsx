@@ -17,6 +17,7 @@ interface IncomeExpenseChartProps {
     name: string;
     income: number;
     expense: number;
+    hasTransactions?: boolean;
   }[];
   height?: number;
 }
@@ -126,11 +127,21 @@ export default function IncomeExpenseChart({ data, height = 350 }: IncomeExpense
           strokeWidth={2}
           fillOpacity={1}
           fill="url(#incomeGradient)"
-          dot={{
-            fill: chartColors.income,
-            stroke: theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF',
-            strokeWidth: 2,
-            r: 4,
+          dot={(props: any) => {
+            const { cx, cy, payload } = props;
+            if (payload.income > 0 || payload.expense > 0) {
+              return (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={4}
+                  fill={chartColors.income}
+                  stroke={theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF'}
+                  strokeWidth={2}
+                />
+              );
+            }
+            return <circle cx={cx} cy={cy} r={0} />;
           }}
           activeDot={{
             r: 6,
@@ -147,11 +158,21 @@ export default function IncomeExpenseChart({ data, height = 350 }: IncomeExpense
           strokeWidth={2}
           fillOpacity={1}
           fill="url(#expenseGradient)"
-          dot={{
-            fill: chartColors.expense,
-            stroke: theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF',
-            strokeWidth: 2,
-            r: 4,
+          dot={(props: any) => {
+            const { cx, cy, payload } = props;
+            if (payload.income > 0 || payload.expense > 0) {
+              return (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={4}
+                  fill={chartColors.expense}
+                  stroke={theme.palette.mode === 'light' ? '#0F172A' : '#FFFFFF'}
+                  strokeWidth={2}
+                />
+              );
+            }
+            return <circle cx={cx} cy={cy} r={0} />;
           }}
           activeDot={{
             r: 6,

@@ -93,7 +93,7 @@ export default function ProfilePage() {
 
   return (
     <Box>
-
+      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
           Meu Perfil
@@ -104,7 +104,7 @@ export default function ProfilePage() {
       </Box>
 
       <Grid container spacing={3}>
-
+        {/* Informações do Perfil */}
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent sx={{ p: 3, textAlign: 'center' }}>
@@ -123,7 +123,7 @@ export default function ProfilePage() {
                 />
               </Box>
 
-
+              {/* Botão Remover Foto - só aparece se houver foto */}
               {avatarUrl && (
                 <Box sx={{ mb: 2 }}>
                   <Button
@@ -164,7 +164,7 @@ export default function ProfilePage() {
           </Card>
         </Grid>
 
-
+        {/* Formulário de Edição */}
         <Grid item xs={12} md={8}>
           <Card sx={{ mb: 3 }}>
             <CardContent sx={{ p: 3 }}>
@@ -210,7 +210,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-
+          {/* Alteração de Senha */}
           <Card>
             <CardContent sx={{ p: 3 }}>
               <Typography variant="h6" sx={{ fontWeight: 600, mb: 3 }}>
@@ -261,7 +261,7 @@ export default function ProfilePage() {
         </Grid>
       </Grid>
 
-
+      {/* Snackbar para feedback */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

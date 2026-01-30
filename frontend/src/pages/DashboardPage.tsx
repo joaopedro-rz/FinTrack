@@ -24,7 +24,7 @@ import IncomeExpenseChart from '@/components/charts/IncomeExpenseChart';
 import DonutChart from '@/components/charts/DonutChart';
 import { dashboardService, incomeService, expenseService } from '@/services';
 import { formatCurrency, formatPercentage } from '@/utils/formatters';
-import { calculateRecurringTotal } from '@/utils/recurringCalculations';
+import { calculateRecurringTotal, calculateCurrentMonthTotal } from '@/utils/recurringCalculations';
 import { chartColors } from '@/theme';
 import { usePeriodFilter } from '@/hooks';
 import type { Dashboard, Income, Expense } from '@/types';
@@ -67,6 +67,7 @@ export default function DashboardPage() {
 
     const monthlyData = new Map<string, { income: number; expense: number }>();
 
+    // Pré-criar buckets para todos os meses do período
     let currentDate = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
     while (currentDate <= endDate) {
       const key = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
@@ -74,6 +75,7 @@ export default function DashboardPage() {
       currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
     }
 
+    // Processar receitas
     incomes.forEach(income => {
       if (income.recurrence === 'ONCE') {
         const date = new Date(income.date);
@@ -85,20 +87,25 @@ export default function DashboardPage() {
         }
       } else {
         const createdDate = new Date(income.date);
-        for (const [key] of monthlyData.entries()) {
-          const [year, month] = key.split('-');
-          const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+        let currentMonth = new Date(Math.max(startDate.getTime(), createdDate.getTime()));
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
 
-          if (monthDate >= createdDate && monthDate >= startDate && monthDate <= endDate) {
+        const endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+        while (currentMonth <= endMonth) {
+          const key = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+          if (monthlyData.has(key)) {
             monthlyData.get(key)!.income += income.amount;
           }
+          currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
         }
       }
     });
 
+    // Processar despesas
     expenses.forEach(expense => {
       if (expense.recurrence === 'ONCE') {
-        const date = new Date(expense.dueDate);
+        const date = new Date(expense.date);
         if (date >= startDate && date <= endDate) {
           const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
           if (monthlyData.has(key)) {
@@ -106,14 +113,18 @@ export default function DashboardPage() {
           }
         }
       } else {
-        const createdDate = new Date(expense.dueDate);
-        for (const [key] of monthlyData.entries()) {
-          const [year, month] = key.split('-');
-          const monthDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+        const createdDate = new Date(expense.date);
+        let currentMonth = new Date(Math.max(startDate.getTime(), createdDate.getTime()));
+        currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
 
-          if (monthDate >= createdDate && monthDate >= startDate && monthDate <= endDate) {
+        const endMonth = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+        while (currentMonth <= endMonth) {
+          const key = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+          if (monthlyData.has(key)) {
             monthlyData.get(key)!.expense += expense.amount;
           }
+          currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
         }
       }
     });
@@ -135,12 +146,15 @@ export default function DashboardPage() {
 
   const chartData = generateChartData();
 
-  const totalIncomeWithRecurrence = calculateRecurringTotal(incomes, dateRange, 'date');
-  const totalExpenseWithRecurrence = calculateRecurringTotal(expenses, dateRange, 'dueDate');
-  const balanceWithRecurrence = totalIncomeWithRecurrence - totalExpenseWithRecurrence;
+  const currentMonthIncome = calculateCurrentMonthTotal(incomes, 'date');
+  const currentMonthExpense = calculateCurrentMonthTotal(expenses, 'date');
+  const currentMonthBalance = currentMonthIncome - currentMonthExpense;
 
-  const savingsRate = totalIncomeWithRecurrence > 0
-    ? ((totalIncomeWithRecurrence - totalExpenseWithRecurrence) / totalIncomeWithRecurrence) * 100
+  const totalIncomeWithRecurrence = calculateRecurringTotal(incomes, dateRange, 'date');
+  const totalExpenseWithRecurrence = calculateRecurringTotal(expenses, dateRange, 'date');
+
+  const savingsRate = currentMonthIncome > 0
+    ? ((currentMonthIncome - currentMonthExpense) / currentMonthIncome) * 100
     : 0;
 
   const pendingExpensesTotal = expenses
@@ -175,8 +189,8 @@ export default function DashboardPage() {
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Receitas Totais"
-            value={totalIncomeWithRecurrence}
+            title="Receitas do Mês"
+            value={currentMonthIncome}
             icon={<TrendingUp />}
             color="success"
             subtitle={`${incomes.length} registros`}
@@ -185,8 +199,8 @@ export default function DashboardPage() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Despesas Totais"
-            value={totalExpenseWithRecurrence}
+            title="Despesas do Mês"
+            value={currentMonthExpense}
             icon={<TrendingDown />}
             color="error"
             subtitle={`${expenses.length} registros`}
@@ -195,10 +209,10 @@ export default function DashboardPage() {
         </Grid>
         <Grid item xs={12} sm={6} lg={3}>
           <StatCard
-            title="Balanço"
-            value={balanceWithRecurrence}
+            title="Balanço do Mês"
+            value={currentMonthBalance}
             icon={<AccountBalance />}
-            color={balanceWithRecurrence >= 0 ? 'primary' : 'error'}
+            color={currentMonthBalance >= 0 ? 'primary' : 'error'}
             subtitle="Receitas - Despesas"
             loading={loading}
           />

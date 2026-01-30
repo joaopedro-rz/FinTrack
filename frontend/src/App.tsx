@@ -48,7 +48,7 @@ export default function App() {
       <CssBaseline />
       <BrowserRouter>
         <Routes>
-
+          {/* Public Routes */}
           <Route
             path="/login"
             element={
@@ -66,7 +66,7 @@ export default function App() {
             }
           />
 
-
+          {/* Protected Routes */}
           <Route
             path="/"
             element={
@@ -84,7 +84,7 @@ export default function App() {
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 
-
+          {/* Catch all - redirect to dashboard or login */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

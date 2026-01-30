@@ -36,12 +36,21 @@ export default function ReportsPage() {
 
   // Filtros - Último mês por padrão
   const getDefaultDates = () => {
-    const endDate = new Date();
-    const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 1);
+    const today = new Date();
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+
+    const endYear = today.getFullYear();
+    const endMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const endDay = String(today.getDate()).padStart(2, '0');
+
+    const startYear = lastMonth.getFullYear();
+    const startMonth = String(lastMonth.getMonth() + 1).padStart(2, '0');
+    const startDay = String(lastMonth.getDate()).padStart(2, '0');
+
     return {
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
+      startDate: `${startYear}-${startMonth}-${startDay}`,
+      endDate: `${endYear}-${endMonth}-${endDay}`,
     };
   };
 
@@ -115,7 +124,7 @@ export default function ReportsPage() {
 
   return (
     <Box>
-
+      {/* Header */}
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
           Relatórios Financeiros
@@ -125,7 +134,7 @@ export default function ReportsPage() {
         </Typography>
       </Box>
 
-
+      {/* Filtros */}
       <Card sx={{ mb: 3, p: 3 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
           <FilterList sx={{ mr: 1, color: 'primary.main' }} />
@@ -186,24 +195,24 @@ export default function ReportsPage() {
         </Grid>
       </Card>
 
-
+      {/* Erro */}
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
-
+      {/* Loading */}
       {loading && (
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
       )}
 
-
+      {/* Relatório */}
       {!loading && report && (
         <>
-
+          {/* Métricas Resumidas */}
           <Grid container spacing={3} sx={{ mb: 3 }}>
             <Grid item xs={12} md={4}>
               <Card sx={{ p: 3, bgcolor: 'success.light' }}>
@@ -251,7 +260,7 @@ export default function ReportsPage() {
             </Grid>
           </Grid>
 
-
+          {/* Botões de Exportação */}
           <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
             <Button
               variant="outlined"
@@ -271,7 +280,7 @@ export default function ReportsPage() {
             </Button>
           </Box>
 
-
+          {/* Tabela de Transações */}
           <Card>
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Typography variant="h6" sx={{ fontWeight: 600 }}>
@@ -283,18 +292,17 @@ export default function ReportsPage() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Data de Criação</TableCell>
+                    <TableCell>Data</TableCell>
                     <TableCell>Tipo</TableCell>
                     <TableCell>Categoria</TableCell>
                     <TableCell>Descrição</TableCell>
-                    <TableCell>Vencimento</TableCell>
                     <TableCell align="right">Valor</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {report.transactions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                      <TableCell colSpan={5} align="center" sx={{ py: 4 }}>
                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                           Nenhuma transação encontrada no período selecionado
                         </Typography>
@@ -303,7 +311,7 @@ export default function ReportsPage() {
                   ) : (
                     report.transactions.map((transaction) => (
                       <TableRow key={transaction.id} hover>
-                        <TableCell>{formatDate(transaction.createdAt)}</TableCell>
+                        <TableCell>{formatDate(transaction.date)}</TableCell>
                         <TableCell>
                           <Chip
                             label={transaction.typeDisplayName}
@@ -320,11 +328,6 @@ export default function ReportsPage() {
                               {transaction.notes}
                             </Typography>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          {transaction.type === 'EXPENSE' && transaction.dueDate
-                            ? formatDate(transaction.dueDate)
-                            : '-'}
                         </TableCell>
                         <TableCell align="right">
                           <Typography
