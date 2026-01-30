@@ -6,6 +6,15 @@
   "installCommand": "npm install",
   "framework": "vite",
   "devCommand": "npm run dev",
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
+  "github": {
+    "silent": true,
+    "autoJobCancelation": true
+  },
   "rewrites": [
     {
       "source": "/api/:path*",

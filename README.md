@@ -5,7 +5,26 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Java-17-orange?style=for-the-badge&logo=java" alt="Java 17">
+  <img src="https://img.shields.io/badge/Spring_Boot-3.x-green?style=for-the-badge&logo=spring" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-5.x-blue?style=for-the-badge&logo=typescript" alt="TypeScript">
+  <img src="https://img.shields.io/badge/PostgreSQL-16-blue?style=for-the-badge&logo=postgresql" alt="PostgreSQL">
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Online-success?style=for-the-badge" alt="Status">
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License">
+</p>
+
+<p align="center">
   <strong>Controle suas finanças de forma inteligente e visual</strong>
+</p>
+
+<p align="center">
+  <a href="https://fintrackdeploy.vercel.app/login" target="_blank">
+    <strong>🚀 Ver Demo Online</strong>
+  </a>
 </p>
 
 <p align="center">
@@ -16,6 +35,20 @@
   <a href="#-screenshots">Screenshots</a> •
   <a href="#-estrutura">Estrutura</a>
 </p>
+
+---
+
+## 🌐 Demo Online
+
+**Acesse a aplicação em produção:**
+
+### 🚀 [https://fintrackdeploy.vercel.app/login](https://fintrackdeploy.vercel.app/login)
+
+**Para testar:**
+1. Crie uma conta nova
+2. Explore todas as funcionalidades
+3. Dashboard com gráficos interativos
+4. CRUD completo de receitas, despesas e investimentos
 
 ---
 
@@ -46,7 +79,9 @@
 - **Zustand** (estado)
 - **Axios** (HTTP client)
 
-## 🚀 Como Executar
+## 🚀 Como Executar Localmente
+
+> **💡 Nota:** O projeto já está deployado e funcionando online em [fintrackdeploy.vercel.app](https://fintrackdeploy.vercel.app). As instruções abaixo são **apenas para desenvolvimento local**.
 
 ### Pré-requisitos
 
@@ -108,7 +143,15 @@ O frontend estará em `http://localhost:3000`
 
 ## 🌐 Deploy
 
-### Deploy em Produção
+### 🎉 Projeto em Produção
+
+O FinTrack está disponível online e 100% funcional:
+
+- **Frontend**: [https://fintrackdeploy.vercel.app](https://fintrackdeploy.vercel.app)
+- **Backend**: [https://commercial-mair-joaopedroprojects-33a9cf90.koyeb.app](https://commercial-mair-joaopedroprojects-33a9cf90.koyeb.app)
+- **Database**: Supabase PostgreSQL
+
+### Infraestrutura
 
 Este projeto está configurado para deploy em:
 
@@ -118,7 +161,7 @@ Este projeto está configurado para deploy em:
 
 📖 **Guia completo de deploy**: [`docs/DEPLOY_GUIDE.md`](docs/DEPLOY_GUIDE.md)
 
-### Resumo Rápido
+### Deploy do Seu Próprio FinTrack
 
 1. **Supabase** - Crie o banco de dados PostgreSQL
 2. **Koyeb** - Deploy do backend via Docker
@@ -135,24 +178,12 @@ DB_USERNAME=postgres
 DB_PASSWORD=sua_senha
 DB_SSL_MODE=require
 JWT_SECRET=seu_secret_seguro
+JWT_EXPIRATION=3600000
+SPRING_PROFILES_ACTIVE=production
 
 # Frontend (Vercel)
 VITE_API_URL=https://seu-app.koyeb.app/api
 ```
-
-## 📸 Screenshots
-
-### Dashboard
-![Dashboard](docs/screenshots/dashboard.png)
-
-### Receitas
-![Receitas](docs/screenshots/incomes.png)
-
-### Despesas
-![Despesas](docs/screenshots/expenses.png)
-
-### Investimentos
-![Investimentos](docs/screenshots/investments.png)
 
 ## 📁 Estrutura do Projeto
 
@@ -227,10 +258,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 👨‍💻 Autor
 
-Desenvolvido como projeto de portfólio.
-
----
-
-<p align="center">
-  Feito com ☕ e 💙
-</p>
+João Pedro Ribeiro Zugaib. Desenvolvido como projeto de portfólio.
